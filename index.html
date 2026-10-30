@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>منصة الكيمياء التفاعلية | أ. سمر الحربي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<!--
+  ============================================================
+  منصة الكيمياء التفاعلية — أ. سمر الحربي
+  ------------------------------------------------------------
+  التخزين: افتراضياً تُحفظ النتائج في المتصفح (localStorage).
+  لعرض نتائج كل الطالبات من أجهزتهن في لوحة المعلمة،
+  ضعي بيانات Supabase في CONFIG بالأسفل، ونفّذي هذا في SQL Editor:
+
+  create table chem_results (
+    id bigserial primary key,
+    name text, cls text, section int, section_title text,
+    score int, total int, duration int,
+    created_at timestamptz default now()
+  );
+  alter table chem_results enable row level security;
+  create policy "insert_all" on chem_results for insert with check (true);
+  create policy "select_all" on chem_results for select using (true);
+  create policy "delete_all" on chem_results for delete using (true);
+  ============================================================
+-->
+<style>
+:root{
+  --bg:#05050a;--card:rgba(18,16,30,.78);--card2:rgba(28,24,46,.85);--line:rgba(255,255,255,.08);
+  --txt:#eeecf7;--mut:#9d9ab5;--v:#b46dff;--v2:#7b3cff;--c:#3ee6ff;--g:#6dffa0;--r:#ff5a7e;--y:#ffd166;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:Tajawal,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden;line-height:1.6}
+button,input,select{font-family:inherit}
+h1,h2,h3,.disp{font-family:"Readex Pro",Tajawal,sans-serif}
+
+/* ===== الخلفية ===== */
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  background:
+   radial-gradient(900px 600px at 85% -10%,rgba(123,60,255,.22),transparent 60%),
+   radial-gradient(700px 500px at -10% 110%,rgba(62,230,255,.14),transparent 60%),
+   radial-gradient(500px 400px at 50% 50%,rgba(180,109,255,.05),transparent 70%)}
+#bg::before{content:"";position:absolute;inset:0;opacity:.35;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 0l28 16v32L28 64 0 48V16zM28 64v33' fill='none' stroke='%23ffffff' stroke-opacity='.05'/%3E%3C/svg%3E")}
+.fl{position:absolute;color:var(--v);opacity:.13;animation:float var(--d,18s) ease-in-out infinite;will-change:transform}
+.fl:nth-child(3n){color:var(--c)}
+.fl svg{width:100%;height:100%}
+@keyframes float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-30px) rotate(25deg)}}
+
+.wrap{position:relative;z-index:1;max-width:1120px;margin:0 auto;padding:18px 16px 40px}
+
+/* ===== الهيدر ===== */
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0 22px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:56px;height:56px;flex:none;position:relative}
+.logo svg{width:100%;height:100%;overflow:visible}
+.orb{transform-origin:32px 32px;animation:spin 6s linear infinite}
+.orb.b{animation-duration:9s;animation-direction:reverse}
+.orb.c{animation-duration:12s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.brand h1{font-size:1.25rem;line-height:1.3;background:linear-gradient(90deg,#fff,var(--v) 60%,var(--c));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand small{color:var(--mut);font-size:.88rem}
+.hbtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{background:var(--card);border:1px solid var(--line);padding:7px 12px;border-radius:999px;font-size:.88rem;display:flex;gap:6px;align-items:center;backdrop-filter:blur(8px)}
+.btn{border:0;cursor:pointer;border-radius:14px;padding:12px 20px;font-weight:700;font-size:1rem;color:#fff;
+  background:linear-gradient(135deg,var(--v2),var(--v));box-shadow:0 6px 24px rgba(123,60,255,.35);transition:.2s;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(123,60,255,.5)}
+.btn.ghost{background:var(--card);border:1px solid var(--line);box-shadow:none;backdrop-filter:blur(8px)}
+.btn.ghost:hover{border-color:var(--v)}
+.btn.sm{padding:8px 14px;font-size:.88rem;border-radius:11px}
+.btn.cy{background:linear-gradient(135deg,#0aa5c2,var(--c));color:#04121a;box-shadow:0 6px 24px rgba(62,230,255,.25)}
+.btn.red{background:linear-gradient(135deg,#c2234b,var(--r));box-shadow:none}
+
+.screen{display:none;animation:in .45s ease}
+.screen.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+
+/* ===== الدخول ===== */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:stretch}
+.hero .intro{padding:34px 30px;position:relative;overflow:hidden}
+.hero .intro h2{font-size:2.1rem;line-height:1.35;margin-bottom:12px}
+.hero .intro h2 span{color:var(--v)}
+.hero .intro p{color:var(--mut);font-size:1.05rem;max-width:460px}
+.stats3{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
+.stat{flex:1;min-width:110px;background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:14px;text-align:center}
+.stat b{display:block;font-family:"Readex Pro";font-size:1.6rem;color:var(--c)}
+.stat span{color:var(--mut);font-size:.85rem}
+.bigatom{position:absolute;left:-40px;bottom:-50px;width:230px;opacity:.12;color:var(--v)}
+.form{padding:30px 26px;display:flex;flex-direction:column;gap:14px;justify-content:center}
+.form h3{font-size:1.3rem}
+.form label{font-size:.9rem;color:var(--mut)}
+.in{width:100%;background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:14px;padding:13px 14px;color:var(--txt);font-size:1rem;outline:0;transition:.2s}
+.in:focus{border-color:var(--v);box-shadow:0 0 0 3px rgba(180,109,255,.2)}
+.tnote{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:rgba(180,109,255,.08);border:1px dashed rgba(180,109,255,.35);font-size:.92rem}
+
+/* ===== الأقسام ===== */
+.sechead{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.sechead h2{font-size:1.6rem}
+.sechead p{color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.tile{position:relative;cursor:pointer;padding:16px 16px 14px;border-radius:20px;background:var(--card);border:1px solid var(--line);transition:.25s;overflow:hidden;text-align:right;color:var(--txt);min-height:168px;display:flex;flex-direction:column}
+.tile::after{content:"";position:absolute;inset:0;border-radius:20px;padding:1px;background:linear-gradient(135deg,var(--h),transparent 55%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.6;transition:.25s}
+.tile:hover{transform:translateY(-5px);box-shadow:0 14px 40px -10px var(--h)}
+.tile:hover::after{opacity:1}
+.tile .no{font-family:"Readex Pro";font-size:.85rem;color:var(--h);font-weight:700}
+.tile .ic{font-size:2.1rem;margin:6px 0 4px;filter:drop-shadow(0 0 12px var(--h))}
+.tile h3{font-size:1.02rem;line-height:1.4;margin-bottom:auto}
+.tile .meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:.8rem;color:var(--mut)}
+.best{background:rgba(109,255,160,.12);color:var(--g);padding:2px 9px;border-radius:99px;font-weight:700}
+
+/* ===== الاختبار ===== */
+.qwrap{max-width:780px;margin:0 auto}
+.qtop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.qtop .t{font-weight:700;display:flex;gap:8px;align-items:center}
+.pbar{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin-bottom:18px}
+.pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--c),var(--v));border-radius:99px;transition:width .4s;box-shadow:0 0 14px var(--v)}
+.qcard{padding:26px 24px;position:relative;overflow:hidden}
+.qnum{display:inline-flex;align-items:center;gap:6px;font-family:"Readex Pro";font-size:.85rem;color:var(--c);background:rgba(62,230,255,.08);border:1px solid rgba(62,230,255,.25);padding:4px 12px;border-radius:99px;margin-bottom:14px}
+.qtext{font-size:1.3rem;font-weight:700;line-height:1.75;margin-bottom:20px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{display:flex;align-items:center;gap:12px;text-align:right;cursor:pointer;padding:14px;border-radius:16px;background:rgba(0,0,0,.35);border:1.5px solid var(--line);color:var(--txt);font-size:1.05rem;transition:.18s;min-height:62px}
+.opt:hover:not(:disabled){border-color:var(--v);background:rgba(180,109,255,.08);transform:translateY(-2px)}
+.opt .l{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,.06);font-weight:800;color:var(--v)}
+.opt span:last-child{direction:auto;unicode-bidi:plaintext}
+.opt.ok{border-color:var(--g);background:rgba(109,255,160,.1);box-shadow:0 0 22px -6px var(--g)}
+.opt.ok .l{background:var(--g);color:#04130a}
+.opt.no{border-color:var(--r);background:rgba(255,90,126,.1);animation:shake .35s}
+.opt.no .l{background:var(--r);color:#fff}
+.opt:disabled{cursor:default}
+@keyframes shake{25%{transform:translateX(6px)}75%{transform:translateX(-6px)}}
+.fb{margin-top:16px;min-height:28px;font-weight:700;font-size:1.05rem}
+.fb.ok{color:var(--g)}.fb.no{color:var(--r)}
+.qact{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:10px}
+.live{font-family:"Readex Pro";color:var(--y);font-weight:700}
+
+/* ===== النتيجة ===== */
+.res{max-width:780px;margin:0 auto;text-align:center;padding:30px 22px}
+.ring{width:190px;height:190px;border-radius:50%;margin:6px auto 16px;display:grid;place-items:center;position:relative;
+  background:conic-gradient(var(--rc,var(--v)) calc(var(--p)*1%),rgba(255,255,255,.07) 0);box-shadow:0 0 50px -10px var(--rc,var(--v))}
+.ring::before{content:"";position:absolute;inset:12px;border-radius:50%;background:#0b0a14}
+.ring div{position:relative;font-family:"Readex Pro"}
+.ring b{display:block;font-size:2.6rem;line-height:1}
+.ring span{color:var(--mut);font-size:.95rem}
+.res h2{font-size:1.6rem;margin-bottom:6px}
+.res .sub{color:var(--mut);margin-bottom:20px}
+.rbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.review{margin-top:26px;text-align:right}
+.review h3{margin-bottom:12px;font-size:1.1rem}
+.rv{padding:14px 16px;border-radius:16px;background:rgba(0,0,0,.3);border:1px solid var(--line);margin-bottom:10px}
+.rv p{font-weight:700;margin-bottom:6px}
+.rv .a{font-size:.95rem}
+.rv .a.w{color:var(--r)}.rv .a.c{color:var(--g)}
+.confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:50;animation:fall linear forwards;border-radius:2px}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+
+/* ===== لوحة المعلمة ===== */
+.dhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.dhead h2{font-size:1.5rem}
+.dhead p{color:var(--mut)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi{padding:16px;border-radius:18px;position:relative;overflow:hidden}
+.kpi small{color:var(--mut);font-size:.85rem}
+.kpi b{display:block;font-family:"Readex Pro";font-size:1.7rem;margin-top:2px}
+.kpi .e{position:absolute;left:12px;top:12px;font-size:1.5rem;opacity:.75}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.filters .in{width:auto;flex:1;min-width:150px;padding:10px 12px}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.tab{cursor:pointer;padding:8px 16px;border-radius:12px;background:transparent;border:1px solid var(--line);color:var(--mut);font-weight:700}
+.tab.on{background:rgba(180,109,255,.15);border-color:var(--v);color:#fff}
+.tbl{overflow-x:auto;border-radius:18px}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th,td{padding:12px 14px;text-align:right;border-bottom:1px solid var(--line);font-size:.95rem}
+th{color:var(--mut);font-weight:700;font-size:.85rem;background:rgba(255,255,255,.03)}
+tr:hover td{background:rgba(180,109,255,.05)}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-weight:800;font-family:"Readex Pro";font-size:.85rem}
+.p-hi{background:rgba(109,255,160,.14);color:var(--g)}
+.p-md{background:rgba(255,209,102,.14);color:var(--y)}
+.p-lo{background:rgba(255,90,126,.14);color:var(--r)}
+.del{background:none;border:0;cursor:pointer;color:var(--mut);font-size:1rem}
+.del:hover{color:var(--r)}
+.bars{padding:16px;display:grid;gap:9px}
+.bar{display:grid;grid-template-columns:170px 1fr 52px;gap:10px;align-items:center;font-size:.9rem}
+.bar .tr{height:10px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden}
+.bar .tr i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--c),var(--v))}
+.empty{padding:40px;text-align:center;color:var(--mut)}
+.src{font-size:.8rem;color:var(--mut)}
+
+/* ===== نافذة ===== */
+.modal{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:none;place-items:center;padding:16px}
+.modal.on{display:grid}
+.modal .card{width:100%;max-width:380px;padding:26px;text-align:center;animation:in .3s}
+.modal h3{margin:8px 0 14px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card2);border:1px solid var(--v);padding:12px 20px;border-radius:14px;z-index:60;transition:.35s;font-weight:700}
+.toast.on{transform:translateX(-50%) translateY(0)}
+footer{text-align:center;color:var(--mut);font-size:.85rem;padding:30px 0 6px}
+footer b{color:var(--v)}
+
+@media (max-width:820px){
+  .hero{grid-template-columns:1fr}
+  .hero .intro h2{font-size:1.6rem}
+  .kpis{grid-template-columns:1fr 1fr}
+  .bar{grid-template-columns:110px 1fr 46px}
+}
+@media (max-width:560px){
+  .opts{grid-template-columns:1fr}
+  .qtext{font-size:1.12rem}
+  .brand h1{font-size:1.05rem}
+  .grid{grid-template-columns:1fr 1fr}
+  .tile{min-height:150px;padding:13px}
+  .tile .ic{font-size:1.7rem}
+}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+
+<div class="wrap">
+<header>
+  <div class="brand">
+    <div class="logo">
+      <svg viewBox="0 0 64 64" fill="none">
+        <defs><radialGradient id="ng"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#b46dff"/></radialGradient></defs>
+        <g class="orb"><ellipse cx="32" cy="32" rx="29" ry="10" stroke="#b46dff" stroke-width="2"/><circle cx="61" cy="32" r="3" fill="#3ee6ff"/></g>
+        <g class="orb b"><ellipse cx="32" cy="32" rx="29" ry="10" stroke="#3ee6ff" stroke-width="2" transform="rotate(60 32 32)"/></g>
+        <g class="orb c"><ellipse cx="32" cy="32" rx="29" ry="10" stroke="#b46dff" stroke-opacity=".7" stroke-width="2" transform="rotate(120 32 32)"/><circle cx="17.5" cy="57" r="2.6" fill="#ffd166"/></g>
+        <circle cx="32" cy="32" r="6" fill="url(#ng)"/>
+      </svg>
+    </div>
+    <div>
+      <h1>منصة الكيمياء التفاعلية</h1>
+      <small>إعداد المعلمة: <b id="tName"></b></small>
+    </div>
+  </div>
+  <div class="hbtns">
+    <span class="chip" id="stuChip" style="display:none">👩‍🎓 <b id="stuName"></b></span>
+    <button class="btn ghost sm" id="homeBtn" style="display:none" onclick="goHome()">⚗️ الأقسام</button>
+    <button class="btn ghost sm" id="outBtn" style="display:none" onclick="logout()">خروج</button>
+    <button class="btn ghost sm" onclick="openTeacher()">👩‍🏫 لوحة المعلمة</button>
+  </div>
+</header>
+
+<!-- الدخول -->
+<section class="screen on" id="login">
+  <div class="hero">
+    <div class="card intro">
+      <div class="bigatom" id="bigAtom"></div>
+      <h2>مرحباً بكِ في <span>مختبر الكيمياء</span> 🧪</h2>
+      <p>اختاري قسماً من أقسام الكيمياء، وأجيبي عن أسئلة تُختار لكِ عشوائياً في كل مرة. اختبري نفسك، وتعلّمي من أخطائك، وارفعي درجتك!</p>
+      <div class="stats3">
+        <div class="stat"><b id="sSec">11</b><span>قسماً</span></div>
+        <div class="stat"><b id="sQ">0</b><span>سؤالاً</span></div>
+        <div class="stat"><b id="sPer">20</b><span>سؤالاً لكل محاولة</span></div>
+      </div>
+    </div>
+    <div class="card form">
+      <h3>تسجيل دخول الطالبة</h3>
+      <div><label>الاسم الثلاثي</label><input class="in" id="inName" placeholder="اكتبي اسمك هنا" maxlength="60"></div>
+      <div><label>الفصل / الشعبة</label><input class="in" id="inCls" placeholder="مثال: ٣/١" maxlength="20"></div>
+      <button class="btn" onclick="login()">ادخلي المختبر ⚗️</button>
+    </div>
+  </div>
+</section>
+
+<!-- الأقسام -->
+<section class="screen" id="home">
+  <div class="sechead">
+    <div><h2>أقسام الكيمياء</h2><p>اختاري القسم الذي تريدين التدرب عليه — <span id="perTxt"></span> سؤالاً عشوائياً في كل محاولة.</p></div>
+  </div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<!-- الاختبار -->
+<section class="screen" id="quiz">
+  <div class="qwrap">
+    <div class="qtop">
+      <div class="t"><span id="qIc"></span><span id="qSec"></span></div>
+      <div class="live">⭐ <span id="qScore">0</span></div>
+    </div>
+    <div class="pbar"><i id="qBar"></i></div>
+    <div class="card qcard">
+      <div class="qnum">سؤال <b id="qN"></b> من <b id="qT"></b></div>
+      <div class="qtext" id="qText"></div>
+      <div class="opts" id="qOpts"></div>
+      <div class="fb" id="qFb"></div>
+      <div class="qact">
+        <button class="btn ghost sm" onclick="quitQuiz()">إنهاء</button>
+        <button class="btn" id="qNext" style="visibility:hidden" onclick="nextQ()">التالي ←</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- النتيجة -->
+<section class="screen" id="result">
+  <div class="card res">
+    <div class="ring" id="ring"><div><b id="rPct"></b><span id="rSc"></span></div></div>
+    <h2 id="rMsg"></h2>
+    <p class="sub" id="rSub"></p>
+    <div class="rbtns">
+      <button class="btn" onclick="startQuiz(quiz.si)">🔁 محاولة جديدة</button>
+      <button class="btn ghost" onclick="goHome()">⚗️ الأقسام</button>
+    </div>
+    <div class="review" id="review"></div>
+  </div>
+</section>
+
+<!-- لوحة المعلمة -->
+<section class="screen" id="dash">
+  <div class="dhead">
+    <div><h2>👩‍🏫 لوحة المعلمة</h2><p>أهلاً <span id="dName"></span> — متابعة درجات الطالبات <span class="src" id="srcTxt"></span></p></div>
+    <div class="hbtns">
+      <button class="btn cy sm" onclick="openDash()">↻ تحديث</button>
+      <button class="btn ghost sm" onclick="exportCSV()">⬇ تصدير Excel</button>
+      <button class="btn ghost sm" onclick="closeDash()">رجوع</button>
+    </div>
+  </div>
+  <div class="kpis">
+    <div class="card kpi"><span class="e">👩‍🎓</span><small>عدد الطالبات</small><b id="kS">0</b></div>
+    <div class="card kpi"><span class="e">🧪</span><small>عدد المحاولات</small><b id="kA">0</b></div>
+    <div class="card kpi"><span class="e">📊</span><small>متوسط الدرجات</small><b id="kAvg">0%</b></div>
+    <div class="card kpi"><span class="e">🏆</span><small>الأعلى أداءً</small><b id="kTop" style="font-size:1.05rem;line-height:1.5">—</b></div>
+  </div>
+  <div class="filters">
+    <input class="in" id="fQ" placeholder="🔍 بحث باسم الطالبة" oninput="renderDash()">
+    <select class="in" id="fSec" onchange="renderDash()"></select>
+    <select class="in" id="fCls" onchange="renderDash()"></select>
+  </div>
+  <div class="tabs">
+    <button class="tab on" data-t="rank" onclick="setTab(this)">🏅 ترتيب الطالبات</button>
+    <button class="tab" data-t="all" onclick="setTab(this)">📋 كل المحاولات</button>
+    <button class="tab" data-t="sec" onclick="setTab(this)">📈 متوسط الأقسام</button>
+  </div>
+  <div class="card tbl" id="dBody"></div>
+  <div style="margin-top:14px;text-align:left"><button class="btn red sm" onclick="wipe()">🗑 حذف جميع النتائج</button></div>
+</section>
+
+<footer>منصة الكيمياء التفاعلية · <b id="fName"></b> · بالعلم نرتقي ⚛️</footer>
+</div>
+
+<!-- نافذة المعلمة -->
+<div class="modal" id="tModal">
+  <div class="card">
+    <div style="font-size:2.4rem">🔐</div>
+    <h3>دخول المعلمة</h3>
+    <input class="in" type="password" id="tPass" placeholder="كلمة المرور" onkeydown="if(event.key==='Enter')checkPass()">
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn" style="flex:1" onclick="checkPass()">دخول</button>
+      <button class="btn ghost" onclick="$('#tModal').classList.remove('on')">إلغاء</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= الإعدادات ================= */
+const CONFIG = {
+  TEACHER_NAME: "أ. سمر الحربي",
+  TEACHER_PASS: "1234",      // كلمة مرور لوحة المعلمة — غيّريها
+  PER_QUIZ: 20,              // عدد الأسئلة في كل محاولة
+  SUPABASE_URL: "",          // اختياري: رابط مشروع Supabase
+  SUPABASE_KEY: "",          // اختياري: anon key
+  TABLE: "chem_results"
+};
+
+/* ================= بنك الأسئلة =================
+   [السؤال، أ، ب، ج، د، رقم الإجابة الصحيحة 0-3] */
+const SECTIONS = [
+{t:"مقدمة في الكيمياء",i:"🔬",h:"#b46dff",q:[
+["علم يقوم بدراسة نظريات تركيب المادة ..","الكيمياء التحليلية","الكيمياء الذرية","الكيمياء الفيزيائية","الكيمياء النووية",1],
+["عبارة «الطاقة لا تفنى ولا تستحدث بل تتحول من شكل إلى آخر» ..","نظرية","قانون علمي","فرضية","طريقة علمية",1],
+["أي التالي ليس من قواعد السلامة في المختبر؟","ارتداء عدسات لاصقة","ارتداء القفازات","ارتداء نظارات الأمان","ارتداء المعطف",0],
+["عدد جزيئات الأوزون الناتجة عن 12 ذرة أكسجين؟","2","3","4","6",2],
+["أي المواد التالية تسبب تناقصاً في طبقة الأوزون؟","ثاني أكسيد الكربون","أكاسيد الكبريت","أكاسيد النيتروجين","الكلوروفلوروكربون",3],
+["أي العبارات التالية صحيح للمادة في الحالة الصلبة؟","جسيماتها متلاصقة بقوة","جسيماتها متباعدة","لها صفة الجريان","تأخذ شكل وحجم الوعاء",0],
+["أي الخيارات التالية تعتبر مادة؟","الضوء","الدخان","الموجات","الحرارة",1],
+["أيّ التالي لا يصنف مادة حسب التعريف العلمي للمادة؟","التراب","الماء","الهواء","الحرارة",3],
+["إحدى حالات المادة شكلها وحجمها غير ثابتين وجسيماتها متباعدة ..","الحالة الصلبة","الحالة السائلة","الحالة الغازية","البلازما",2],
+["أي الخواص التالية يمثل خاصية فيزيائية؟","تكون صدأ الحديد","احتراق قطعة خشب","فقد الفضة بريقها","توصيل النحاس للكهرباء",3],
+["الصفة الكمية لورقة الإجابة التي بين يديك ..","ملمسها","مقاسها","لونها","رائحتها",1],
+["أي الخواص التالية كمية؟","الماء عديم اللون","الليمون طعمه حامض","الألعاب النارية ملونة","دورق زجاجي حجمه 50 mL",3],
+["أي الخواص التالية نوعية؟","الكثافة","الكتلة","الحجم","الطول",0],
+["أي الخواص التالية كيميائية؟","الغليان","التبخر","فقدان الفضة لمعانها","توصيل الحرارة",2],
+["أي الخواص التالية للحديد خاصية كيميائية؟","صلب، ناعم الملمس","يصدأ في الهواء الرطب","قابل للسحب والطرق","موصل جيد للحرارة والكهرباء",1],
+["أي خصائص ملح الطعام التالية تمثل خاصية كيميائية؟","طعمه مالح","لونه أبيض","شكله بلوري","لا يتفاعل مع الماء النقي",3],
+["أي التالي يمثل خاصية كيميائية؟","يذوب الملح في الماء الساخن","يغلي الماء ويتصاعد بخاره عند 100 °C","ينصهر الثلج عند درجة حرارة الغرفة","يصدأ الحديد عندما يتعرض سطحه للهواء الرطب",3],
+["أي التالي يعد تغيراً فيزيائياً؟","تحلل","تأكسد","انفجار","انصهار",3],
+["يزداد حجمه عند التحول من الحالة السائلة إلى الحالة الصلبة ..","H₂O","HCl","NH₃","CH₄",0],
+["أي التغيرات التالية تغيراً في تركيب المادة وخواصها ويؤدي إلى تكوين مواد جديدة؟","تغير نوعي","تغير كمي","تغير كيميائي","تغير فيزيائي",2],
+["أي مما يلي تغير كيميائي؟","سكر ذائب في ماء","أيس كريم ينصهر","ماء يغلي","عود ثقاب مشتعل",3],
+["أي التغيرات التالية يعد تغيراً كيميائياً؟","كسر لوح زجاجي","احتراق ورقة","تقطيع ورقة","صقل الألماس",1],
+["الخاصية التي تميز المركب أن مكوناته ..","متحدة بأي نسبة","تُفصل بالترشيح","يحدث بينها تفاعل كيميائي","لا تفقد خواصها الأساسية",2],
+["إذا كانت المادة تحوي تركيباً محدداً وتتكون من عدة عناصر؛ فإنها تُسمى ..","مخلوطاً غير متجانس","مخلوطاً متجانساً","مركباً","نظيراً",2],
+["أي الصيغ التالية لا تعد مركباً؟","H₂SO₄","HCl","Br₂","H₂O",2],
+["أي التالي من العناصر الكيميائية؟","H₂O","HCl","CO₂","Cr",3],
+["يعتبر ملح الطعام ..","عنصراً","محلولاً","مخلوطاً","مركباً",3],
+["إعادة ترتيب ذرات عنصرين أو أكثر لتكوين مواد مختلفة تُسمى ..","التفاعل الكيميائي","المعادلة الكيميائية","الاتزان الكيميائي","سرعة التفاعل الكيميائي",0],
+["التفاعل الذي توجد به مادة متفاعلة واحدة هو ..","تفكك","إحلال","احتراق","تكوين",0],
+["ما نوع التفاعلات التي تحدث بكثرة في المحاليل المائية؟","إحلال بسيط","إحلال مزدوج","تفكك","تكوين",1],
+["يعتبر التفاعل الكيميائي A + BX → AX + B تفاعل ..","إحلال بسيط","إحلال مزدوج","تفكك","تكوين",0],
+["أكملي المعادلة: F₂ + 2NaBr → 2NaF + ....","Na","Br","F","Br₂",3],
+["تفاعل الصوديوم مع الماء ينتج عنه غاز ..","H₂O₂","O₂","Br₂","H₂",3],
+["أي التفاعلات التالية يصنف تفاعل إحلال؟","2Al + 3S → Al₂S₃","2Li + 2H₂O → 2LiOH + H₂","H₂O + N₂O₅ → 2HNO₃","4NO₂ + O₂ → 2N₂O₅",1],
+["إذا نتج مركبان في تفاعل كيميائي فإن نوع التفاعل الذي تم ..","تكوين","إحلال مزدوج","إحلال بسيط","اتحاد",1],
+["نوع التفاعل الذي ينتج عنه مادة واحدة ..","إحلال","تفكك","تكوين","تحلل",2],
+["نوع التفاعل 2Na + Cl₂ → 2NaCl ..","تكوين","تفكك","احتراق","إحلال",0],
+["ما نوع التفاعل في المعادلة Mg + Cl₂ → MgCl₂ ؟","تفكك","إحلال بسيط","تكوين","إحلال مزدوج",2],
+["كتل المواد المتفاعلة وكتل المواد الناتجة عن التفاعل الكيميائي ..","غير متساوية","كلاهما مواد صلبة","متساوية","لا توجد علاقة بينهما",2],
+["تمثل x ، y على الترتيب في المعادلة الموزونة: CH₄ + x → CO₂ + y","O₂ ، H₂O","O₂ ، 2H₂O","2O₂ ، H₂O","2O₂ ، 2H₂O",3],
+["المعادلات الكيميائية تحقق قانون ..","حفظ الطاقة","حفظ الكتلة","حفظ الشحنة","النسب الثابتة",1],
+["أولى الخطوات في إجراء الحسابات الكيميائية في المعادلات هي ..","حساب المولات","حساب كتل المواد","وزن المعادلة الكيميائية","إيجاد نسبة مولات المواد",2]
+]},
+{t:"الكيمياء العامة",i:"⚗️",h:"#3ee6ff",q:[
+["من خواص المخلوط ..","لا تفقد مكوناته خواصها","ينتج عن تفاعل كيميائي","تتكون مواده بنسب ثابتة","تُفصل مكوناته بطرق كيميائية",0],
+["أي من التالي من خصائص المخاليط المتجانسة؟","تنفصل مع مرور الوقت","الحركة البراونية","ظاهرة تندال","لا يمكن التمييز بين مكوناتها",3],
+["أي المخاليط التالية متجانسة؟","مخلوط المكسرات","السلطة","مجموعة من الفواكه","ملح الطعام مذاب في الماء",3],
+["مواد غير موزعة بانتظام لا تمتزج مكوناتها تماماً ..","مخلوط متجانس","محلول","مخلوط غير متجانس","سبيكة",2],
+["المخلوط الغروي يُعدّ ..","مخلوطاً متجانساً","محلولاً","مخلوطاً غير متجانس","مخلوطاً معلقاً",2],
+["الحليب ..","مخلوط غروي","مخلوط معلق","مخلوط متجانس","محلول",0],
+["انسياب المادة الصلبة داخل المخلوط المعلّق وكأنها سائل ..","الترسيب","الترويق","الترشيح","التميّع",3],
+["حركة عشوائية وعنيفة لجسيمات المذاب في المخاليط الغروية ..","الحركة الدورانية","الحركة الغروانية","الحركة الاهتزازية","الحركة البراونية",3],
+["الحركة البراونية تمنع جسيمات المذاب من .... في المخلوط.","التأين","الترابط","الترسب","الذوبان",2],
+["يمكن فصل مخلوط الملح والرمل بواسطة ..","التقطير","التبلور","الترشيح","الكروماتوجرافيا",2],
+["الطريقة المناسبة لفصل مكونات مخلوط غير متجانس مكون من مادة صلبة وسائلة هي ..","التبلور","التقطير","الترشيح","التسامي",2],
+["طريقة فصل مكونات قلم الحبر عن الماء ..","الترشيح","التبلور","الكروماتوجرافيا","التقطير",2],
+["أي التالي تتم فيه عملية تشتيت الضوء بفعل جسيمات المذاب؟","تأثير تندال","الحركة البراونية","المخلوط المتجانس","الذوبانية",0],
+["تأثير تندال ..","تحليل الضوء","حركة عشوائية","تشتيت الضوء","حركة عنيفة",2],
+["يستخدم كدليل لتحديد كمية المذاب ..","تأثير تندال","الحركة البراونية","الكهروستاتيكية","الخاصية الأسموزية",0],
+["أي التالي يُعدّ محلولاً؟","المخلوط المتجانس","المخلوط غير المتجانس","المخلوط المعلق","المخلوط الغروي",0],
+["أيّ مما يلي يتكون من مذاب ومذيب؟","المخلوط غير المتجانس","المخلوط المعلق","المخلوط الغروي","المحلول",3],
+["الهواء يحوي مذيب ومذاب من نوع ..","سائل - سائل","غاز - غاز","سائل - غاز","صلب - سائل",1],
+["مقياس يعبر عن كمية المذاب الذائبة في كمية محددة من المذيب ..","حجم المحلول","كتلة المحلول","تركيز المحلول","ذوبانية المحلول",2],
+["النسبة المئوية بالكتلة لمحلول يحوي 5 g من مادة مذابة في 50 g من الماء ..","9%","10%","12%","5%",0],
+["النسبة المئوية بالحجم لمحلول يحوي 200 mL من H₂SO₄ في 1 L من H₂O ..","500%","16.66%","0.5%","30%",1],
+["عدد مولات المذاب الذائبة في لتر من المحلول ..","المولالية","النسبة المئوية الحجمية للمذاب","المولارية","النسبة المئوية الوزنية للمذاب",2],
+["المولارية هي ..","عدد المولات ÷ حجم المحلول","عدد المولات × حجم المحلول","عدد المولات + حجم المحلول","عدد المولات − حجم المحلول",0],
+["مول لكل لتر هي وحدة ..","المولالية","المولارية","الكسر المولي","النسبة المئوية بدلالة الكتلة",1],
+["محلول حجمه 100 mL وعدد مولات المذاب فيه 2 mol، كم تبلغ مولارية هذا المحلول؟","0.1 M","0.2 M","2 M","20 M",3],
+["عدد مولات المذاب .... عند تخفيف المحاليل.","ينقص","يزداد","يتضاعف","لا يتغير",3],
+["حجم المحلول القياسي 2.0 M KI اللازم لتحضير محلول مخفف منه تركيزه 1.0 M وحجمه 0.2 L هو ..","100 mL","200 mL","300 mL","400 mL",0],
+["عدد مولات المذاب في 1 kg من المذيب ..","المولارية","المولالية","الكسر المولي","النسبة المئوية بدلالة الكتلة",1],
+["احسبي مولالية محلول يحوي 10 مولات ذائبة في 1 kg من الماء.","10 mol/kg","15 mol/kg","20 mol/kg","25 mol/kg",0],
+["الذوبان هو ..","إحاطة جسيمات المذاب بجسيمات المذيب","إحاطة جسيمات المذيب بجسيمات المذاب","إبعاد جسيمات المذيب عن جسيمات المذاب","ترسيب جسيمات المذاب في قاع الوعاء",0],
+["أي الطرق التالية ليست من طرق زيادة سرعة الذوبان؟","زيادة مساحة سطح المذاب","عدم ملامسة المذاب للمذيب","تحريك المحلول","رفع درجة حرارة المذيب",1],
+["المحلول غير المشبع يحوي كمية من المذاب .... الكمية اللازمة لتشبعه.","أكثر من","يساوي","أقل من","ضعف",2],
+["أي المحاليل التالية يحوي أكبر كمية من المذاب عند ضغط ودرجة حرارة معينين؟","محلول غير مشبع","محلول مشبع","محلول منظم","محلول قياسي",1],
+["كمية المذاب في المحلول فوق المشبع أكبر منها في المحلول ..","العياري","المنظم","القياسي","المشبع",3],
+["كيف نجعل ثاني أكسيد الكربون يذوب في سائل؟","تحريك مستمر","خفض الضغط","رفع درجة الحرارة","خفض درجة الحرارة",3],
+["ذوبانية غاز في سائل تزداد بـ ..","انخفاض الضغط","زيادة التحريك","انخفاض درجة الحرارة","زيادة الحجم",2],
+["ذوبانية غاز 20 g/L عند ضغط 40 Pa، ما قيمة الضغط الذي تصبح عندها ذوبانيته 10 g/L؟","20 Pa","800 Pa","200 Pa","400 Pa",0],
+["ليس من الخواص الجامعة للمحاليل ..","ارتفاع درجة الغليان","الضغط الأسموزي","الكثافة","انخفاض درجة التجمد",2],
+["ليس من الخواص الجامعة للمحاليل ..","الضغط الأسموزي","انخفاض درجة التجمد","الضغط الجوي","ارتفاع درجة الغليان",2],
+["الضغط البخاري .... عدد جسيمات المذاب في المذيب.","يزداد بزيادة","لا يتأثر بتغير","ينقص بزيادة","ينقص بنقصان",2],
+["تأثير الضغط البخاري لـ 1 mol NaCl أقل من تأثير الضغط البخاري لـ ..","1 mol KCl","1 mol MgO","1 mol HBr","1 mol AlCl₃",3],
+["عند إضافة مادة غير متطايرة إلى سائل نقي فإن ..","درجة الغليان تنخفض ودرجة التجمد ترتفع","درجة الغليان ترتفع ودرجة التجمد تنخفض","درجة الغليان لا تتأثر","درجة الغليان ودرجة التجمد تنخفضان",1],
+["الفرق بين درجة حرارة غليان المحلول ودرجة غليان المذيب النقي ..","الانخفاض في درجة الغليان","درجة غليان المذيب النقي","الارتفاع في درجة الغليان","درجة غليان المذاب",2],
+["عندما يعادل ضغط السائل ضغط الغاز المحيط به يحدث ..","انصهار","ذوبان","انخفاض درجة التجمد","غليان",3],
+["محلول تركيزه 0.5 m ، و Kb = 0.5 °C/m ، الارتفاع في درجة غليانه ..","0 °C","0.25 °C","0.5 °C","0.75 °C",1],
+["الفرق بين درجة تجمد المحلول ودرجة تجمد مذيبه النقي ..","الانخفاض في درجة الغليان","درجة غليان المذيب النقي","الانخفاض في درجة التجمد","درجة غليان المذاب",2],
+["محلول مائي تركيزه 0.25 m وثابت الانخفاض في درجة التجمد للمذيب 2 °C/m ، احسبي الانخفاض في درجة التجمد.","0.1 °C","0.25 °C","0.5 °C","1 °C",2],
+["إضافة الملح إلى الجليد على الطرق في فصل الشتاء تؤدي إلى ..","رفع درجة تجمد الجليد فتزداد صلابة الطريق","خفض درجة حرارة الجليد فيزداد صلابة","رفع درجة حرارة الجليد فينصهر الجليد","خفض درجة التجمد للجليد فينصهر الجليد",3],
+["الضغط الأسموزي ناتج عن انتقال جزيئات الماء ..","من المحلول القياسي","إلى المحلول المركز","إلى المحلول المخفف","من المحلول المنظم",1],
+["انتشار المذيب من المحلول الأقل تركيزاً إلى المحلول الأعلى تركيزاً ..","التركيز المولاري","التخفيف","الخاصية الأسموزية","الذائبية",2],
+["جسيمات الغاز ..","صغيرة جداً ودائمة الحركة","صغيرة جداً وساكنة","كبيرة جداً ودائمة الحركة","كبيرة جداً وساكنة",0],
+["أيّ المواد التالية قابلة للتمدد والانتشار؟","السوائل","الغازات","المواد الصلبة","البلازما",1],
+["قوى التجاذب والتنافر بين جسيمات الغاز ..","كبيرة","متوسطة","صغيرة","منعدمة",3],
+["طاقة حركة جسيم الغاز تعتمد على ..","كتلته وحجمه","كتلته وسرعته","سرعته وحجمه","كتلته وسرعته وحجمه",1],
+["معدل سرعة تدفق الغاز يتناسب عكسياً مع ..","كتلته المولية","مربع الكتلة المولية له","حجمه","الجذر التربيعي لكتلته المولية",3],
+["للمقارنة بين معدلي سرعة تدفق غازين يُستخدم قانون ..","شارل","دالتون","بويل","جراهام",3],
+["الضغط يعادل .... على وحدة المساحة.","الكتلة","القوة","الحجم","الكثافة",1],
+["وحدة القياس N/m² تعادل ..","Hz","J/g.°C","Pa","m/L",2],
+["جهاز البارومتر يستخدم لقياس ..","الضغط الجوي","ضغط المائع","الكثافة","تدفق المائع",0],
+["المانومتر يستخدم لقياس ..","الكتلة","ضغط غاز محصور","الكثافة","الضغط الجوي",1],
+["الضغط الكلي لخليط من الغازات = مجموع الضغوط الجزئية للغازات ..","قانون هنري","قانون بويل","قانون شارل","قانون دالتون",3],
+["الضغط الكلي لخليط من الغازات يحوي 0.2 atm CO₂ و 0.1 atm N₂ و 0.2 atm O₂ ..","0.3","0.2","0.1","0.5",3],
+["العامل غير المؤثر على الضغط الجزئي للغاز هو ..","نوع الغاز","عدد المولات","حجم الوعاء","درجة حرارة خليط الغاز",0]
+]},
+{t:"قوى التجاذب والروابط",i:"🔗",h:"#ff7ad9",q:[
+["أي القوى التالية من القوى الجزيئية؟","قوى التلاصق","الرابطة التساهمية","الثنائية القطبية","قوى التشتت",1],
+["أي القوى التالية ليست من القوى بين الجزيئية؟","قوى التلاصق","الثنائية القطبية","الروابط الهيدروجينية","قوى التشتت",0],
+["قوى التشتت .... بزيادة عدد الإلكترونات في السحابة الإلكترونية.","تنعدم","تنقص","لا تتغير","تزداد",3],
+["أي المركبات التالية لا ترتبط بقوى التشتت؟","CH₄","O₂","H₂O","I₂",2],
+["قوى الترابط بين جزيئات الأكسجين ..","قوى ثنائية القطب","الرابطة الأيونية","قوى التشتت","الرابطة الهيدروجينية",2],
+["قوى تجاذب بين مناطق مختلفة الشحنة في الجزيئات القطبية ..","قوى ثنائية القطب","الرابطة الهيدروجينية","قوى التشتت","الرابطة الأيونية",0],
+["أي المركبات التالية قطبي؟","CH₄","CO₂","H₂O","N₂",2],
+["ما هو المركب الذي له أعلى قطبية؟","H₂O","NH₃","CH₃CH₃","CH₄",0],
+["أي الروابط التالية الأعلى قطبية؟","C–H","O–H","N–H","Si–H",1],
+["أي المركبات التالية يحوي روابط هيدروجينية أقوى بين جزيئاته؟","NH₃","H₂O","CH₄","HCl",1],
+["أي المركبات التالية غير قطبي؟","HCl","CH₄","H₂O","NH₃",1],
+["أي مما يلي لا يكوّن رابطة هيدروجينية؟","الميثان","الماء","الأمونيا","فلوريد الهيدروجين",0],
+["في الأيون الموجب: عدد الإلكترونات .... عدد البروتونات.","أكثر من","يساوي","أقل من","ليس له علاقة بـ",2],
+["الشحنة الكلية لمركب Na₂CO₃ ..","0","−2","+2","+4",0],
+["الإلكترونات الموجودة في مستوى الطاقة الخارجي للذرة ..","إلكترونات الذرة","إلكترونات الأيون","الإلكترونات الحرة","الإلكترونات المرتبطة",2],
+["أيون الفلز شحنته تساوي عدد إلكترونات ..","جميع مستوياته","المستوى الأول","المستوى الثاني","تكافؤه",3],
+["قوة تجاذب بين الأيونات الموجبة للفلزات والإلكترونات الحرة ..","الثنائية القطبية","الرابطة التساهمية","الرابطة التساهمية القطبية","الرابطة الفلزية",3],
+["تتداخل فيها مستويات الطاقة في نموذج يسمى بحر الإلكترونات ..","الرابطة الأيونية","الرابطة الفلزية","الرابطة التساهمية","الرابطة التساهمية القطبية",1],
+["قوة كهروستاتيكية تنشأ عن تجاذب الأيونات ذات الشحنات المختلفة ..","أيونية","تساهمية","تناسقية","فلزية",0],
+["رابطة تتكون من عنصر فلز وعنصر لافلز ..","تساهمية","أيونية","هيدروجينية","قطبية",1],
+["صيغة كلوريد الألومنيوم ..","AlBr₃","AlF₃","Al₂O₃","AlCl₃",3],
+["يتكون الطباشير من ..","كربونات الماغنسيوم","كربونات الصوديوم","كربونات البوتاسيوم","كربونات الكالسيوم",3],
+["ما هي الصيغة الكيميائية لملح الطعام؟","NaCl","NaF","KI","AlF₃",0],
+["ما نوع الرابطة في جزيء كلوريد الصوديوم؟ علماً بأن (Na = 11 , Cl = 17)","أيونية","تساهمية","فلزية","هيدروجينية",0],
+["الرابطة التي تنشأ بين البوتاسيوم K والفلور F ..","أيونية","فلزية","تساهمية","تناسقية",0],
+["صيغة كربونات الصوديوم ..","NaHCO₃","Na₂CO₃","Na₂SO₄","Na₂SO₃",1],
+["أي التالي يمثل الاسم الصحيح للصيغة الكيميائية K₂CO₃ ؟","بيكربونات البوتاسيوم","كبريتات الكالسيوم","كربونات البوتاسيوم","كبريتات البوتاسيوم",2],
+["ما هي الصيغة الكيميائية لأكسيد الماغنسيوم؟","Mg₂O₂","MgO","Mg₂O","MgO₂",1],
+["أيون ClO₃⁻ يُسمى ..","بيركلورات","هيبوكلوريت","كلورات","كلوريت",2],
+["محلول كلوريد الصوديوم ..","لا يحوي أيونات","يحوي أيونات","تساهمي","لا يوصل التيار الكهربي",1],
+["إذابة 1 mol من كلوريد الصوديوم في 1 kg من الماء ينتج عنها ..","1 mol من الأيونات","2 mol من الأيونات","3 mol من الأيونات","4 mol من الأيونات",1],
+["أي الجزيئات التالية تحوي أقوى رابطة تساهمية؟","O₂","Cl₂","N₂","F₂",2],
+["أي الجزيئات التالية تحتوي على رابطة ثنائية بين ذرتين؟ (H=1 ، O=8 ، N=7 ، I=53)","N₂","H₂","I₂","O₂",3],
+["الرابطة بين جزيئات الكربون ..","أيونية","فلزية","تساهمية","هيدروجينية",2],
+["تفاعل الكربون مع الكلور يكوّن رابطة ..","أيونية","تساهمية","تناسقية","هيدروجينية",1],
+["الرابطة سيجما تتكون من تداخل مستويات التكافؤ الفرعية ..","رأسياً","أفقياً","المتوازية","بالجنب",0],
+["ما عدد الروابط سيجما والروابط باي في جزيء الأسيتيلين H–C≡C–H ؟","ثلاث روابط سيجما ورابطتان باي","رابطة سيجما وثلاث روابط باي","رابطتان سيجما ورابطة باي","رابطة سيجما وأربع روابط باي",0],
+["نتيجة عدم جذب الذرات لإلكترونات الرابطة المشتركة بالقوة نفسها تتكون الرابطة ..","التساهمية النقية","التساهمية غير القطبية","الأيونية","التساهمية القطبية",3],
+["أي المركبات التالية يحوي رابطة تساهمية قطبية؟","F–F","K–F","H–F","Na–F",2],
+["جميع المركبات التالية تحوي رابطة تساهمية غير قطبية عدا ..","H₂","H₂O","O₂","F₂",1],
+["جزيء الكلور ترتبط فيه ذرتا الكلور برابطة ..","تساهمية قطبية","أيونية","تساهمية غير قطبية","تناسقية",2],
+["مركب يحوي رابطة تساهمية قطبية يكون فرق الكهروسالبية له ..","أقل من 1.7","0","أكثر من 1.7","من 0.4 إلى 1.7",3],
+["عندما يكون فرق الكهروسالبية بين ذرتي الرابطة صفراً فإن المركب ..","تساهمي قطبي","أيوني","تساهمي غير قطبي","يكوّن رابطة هيدروجينية",2],
+["يكون التفاعل الكيميائي ماصاً للطاقة إذا كانت طاقة تفكيك روابط المتفاعلات .... طاقة تكوين روابط النواتج.","أصغر من","أكبر من","تساوي","تزداد بزيادة",1],
+["المركب الأعلى طاقة شبكة بلورية ..","LiF","LiCl","LiBr","LiI",0],
+["طاقة الشبكة البلورية لـ MgO .... طاقة الشبكة البلورية لـ NaF.","ربع","نصف","تساوي","أكبر من",3],
+["مادة ذراتها مرتبة في بناء هندسي ..","المخلوط الغروي","المخلوط المعلق","المادة الصلبة البلورية","المادة الصلبة غير البلورية",2],
+["السكر من المواد البلورية الصلبة ..","الأيونية","الذرية","الجزيئية","الفلزية",2],
+["من المواد الصلبة البلورية التساهمية ..","الألماس","السكر","ملح الطعام","المطاط",0],
+["جيدة التوصيل للحرارة والكهرباء ..","المواد الصلبة الأيونية","المواد الصلبة الذرية","المواد الصلبة الجزيئية","المواد الصلبة الفلزية",3],
+["مواد لا تترتب جسيماتها بنمط متكرر ولا تحوي بلورات ..","المواد الصلبة الفلزية","المواد الصلبة الأيونية","المواد الصلبة غير المتبلورة","المواد الصلبة التساهمية",2],
+["عملية تحوّل المادة من الحالة الغازية إلى الحالة الصلبة دون المرور بالحالة السائلة ..","التسامي","الترسب","التبخر","التكاثف",1],
+["تكوّن قطرات صلبة على الأسطح الباردة عند ملامسة بخار الماء لها ..","التسامي","الانصهار","التبخر","الصقيع",3],
+["مخطط الحالة الفيزيائية للمادة عبارة عن رسم بياني للضغط و ..","درجة الحرارة","الحجم","الكتلة","الكثافة",0],
+["نقطة تقع على الرسم البياني يوجد عندها الماء في حالاته الثلاث معاً ..","النقطة الحرجة","النقطة الثلاثية","نقطة الأصل","نقطة الاتزان",1],
+["نقطة على الرسم البياني لا يمكن للماء بعدها أن يكون سائلاً ..","نقطة الاتزان","نقطة الأصل","النقطة الثلاثية","النقطة الحرجة",3],
+["تُسمى عملية خلط المجالات الفرعية لتكوين مجالات جديدة بعملية ..","التهجين","التأين","التشبع","الأكسدة",0],
+["إذا كان مقدار زاوية الرابطة 180° فما نوع التهجين؟","sp","sp²","sp³","sp³d",0],
+["ما نوع التهجين في جزيء H₂O ؟","sp²","sp","sp³d","sp³",3],
+["نوع التهجين في جزيء N₂O ..","sp²","sp³d²","sp³d","sp³",3],
+["جزيء الماء شكله ..","رباعي الأوجه","منحنٍ","خطي","مثلث مستوٍ",1],
+["أي الجزيئات التالية شكله رباعي الأوجه؟","CH₄","N₂O","H₂O","BeCl₂",0],
+["القدرة النسبية للذرة لجذب إلكترونات الرابطة الكيميائية ..","الكهروسالبية","التأين","القطبية","الترشيح",0],
+["أي الخصائص التالية ترتبط بالجزيئات القطبية؟","لا تحوي شحنات جزئية","روابطها أيونية","روابطها تناسقية","تنجذب للمجال الكهربي",3]
+]},
+{t:"الأحماض والقواعد",i:"🧪",h:"#ffd166",q:[
+["طعمها مُرّ ..","المحاليل الحمضية","المحاليل القاعدية","المحاليل المتعادلة","المحاليل المترددة",1],
+["المحاليل الحمضية ..","طعمها مُرّ","ملمسها زلق","لا توصل الكهرباء","توصل الكهرباء",3],
+["محاليل الأحماض تحول لون ورقة تباع الشمس من ..","الأزرق إلى الأحمر","الأزرق إلى الأخضر","الأزرق إلى الأصفر","الأحمر إلى الأزرق",0],
+["محاليل القواعد تحول لون ورقة تباع الشمس من ..","الأزرق إلى الأحمر","الأحمر إلى الأخضر","الأحمر إلى الأصفر","الأحمر إلى الأزرق",3],
+["مادة تحول ورق تباع الشمس ذات اللون الأحمر إلى اللون الأزرق ..","KCl","HCl","NaOH","CH₃COOH",2],
+["المحلول المتعادل يحوي تركيزين متساويين من أيونات الهيدروجين و ..","الهيدروكسيد","الأكسجين","الكلوريد","النيتروجين",0],
+["في المحلول الحمضي: تركيز أيونات الهيدروجين .... الهيدروكسيد.","ليس له علاقة بـ","أقل من","يساوي","أكثر من",3],
+["تركيز أيونات الهيدروكسيد فيه أكثر من أيونات الهيدروجين ..","المحلول الحمضي","المحلول المتعادل","المحلول القاعدي","المحلول المتردد",2],
+["أيون هيدروجين مرتبط مع جزيء ماء برابطة تساهمية ..","H₃O⁺","OH⁻","H⁺","H₃O⁻",0],
+["تفاعل الماء مع الهيدروجين ينتج عنه ..","أمونيوم","هيدروكسيد","هيدرونيوم","أمونيا",2],
+["تأين الماء النقي ينتج عنه أعداداً من أيونات H⁺ و OH⁻ بحيث أن ..","أعدادهما متساوية","عدد أيونات OH⁻ أكثر","عدد أيونات H⁺ أكثر","عدد أيونات H⁺ قليل جداً",0],
+["الحمض في نظرية أرهينيوس مادة تحوي .... وتتأين منتجة أيوناته.","النيتروجين","الهيدروجين","الأكسجين","الفلور",1],
+["تعريف القاعدة حسب نظرية أرهينيوس هي المادة التي ..","تنتج H⁺","تنتج OH⁻","تمنح زوجاً من الإلكترونات","تستقبل زوجاً من الإلكترونات",1],
+["الصيغة الكيميائية لهيدروكسيد الماغنسيوم ..","Mg(OH)₃","MgOH","Mg₂OH","Mg(OH)₂",3],
+["حسب نموذج برونستد - لوري فإن المادة المانحة لأيون الهيدروجين ..","مادة مترددة","مادة متعادلة","حمض","قاعدة",2],
+["الحمض المرافق للقاعدة HCO₃⁻ ..","CO₃²⁻","H₂CO₃","HCO₃","HCO₃²⁻",1],
+["القاعدة المرافقة لحمض الفورميك في التفاعل HCOOH ⇌ HCOO⁻ + H₃O⁺ ..","HCOOH","H₂O","HCOO⁻","H₃O⁺",2],
+["القاعدة المرافقة لحمض الفوسفوريك H₃PO₄ ..","H₃PO₄⁻","PO₄³⁻","HPO₄²⁻","H₂PO₄⁻",3],
+["حسب تعريف برونستد - لوري فإن الأمونيا ..","مادة مترددة","حمض","مادة متعادلة","قاعدة",3],
+["الحمض المرافق للقاعدة NH₃ ..","NH₂","NH⁻","NH₃⁺","NH₄⁺",3],
+["المواد المترددة تسلك سلوك ..","الأحماض فقط","القواعد فقط","الأحماض والقواعد","المواد المتفرجة",2],
+["مادة مترددة ..","الماء","هيدروكسيد الصوديوم","الأمونيا","كربونات الصوديوم",0],
+["الحمض أحادي البروتون حمض يمنح ..","أيون هيدروكسيد واحد","أيون نيتروجين واحد","أيون أكسجين واحد","أيون هيدروجين واحد",3],
+["حمض الهيدروكلوريك HCl ..","أحادي البروتون","ثنائي البروتون","ثلاثي البروتون","رباعي البروتون",0],
+["الحمض متعدد البروتون يحوي أكثر من .... قابلة للتأين.","ذرة أكسجين","ذرة نيتروجين","ذرة هيدروجين","ذرة فلور",2],
+["حمض ثنائي البروتون ..","HCOOH","H₂SO₄","CH₃COOH","H₃PO₄",1],
+["حمض الفسفوريك H₃PO₄ .... البروتون.","أحادي","ثنائي","ثلاثي","رباعي",2],
+["حمض لويس ..","يمنح إلكترونات","يستقبل إلكترونات","يعطي H⁺","يستقبل H⁺",1],
+["المادة المستقبلة لزوج من الإلكترونات هي ..","حمض لويس","قاعدة لويس","حمض برونستد - لوري","قاعدة برونستد - لوري",0],
+["أي مما يلي يمثل حمض لويس؟","O²⁻","BF₃","F⁻","NH₃",1],
+["الأنهيدريد الحمضي يتحد مع الماء فينتج ..","قاعدة","مادة متعادلة","حمض","مادة مترددة",2],
+["أيّ الأكاسيد التالية أنهيدريد قاعدي؟","ثاني أكسيد الكربون","أكسيد الكالسيوم","ثاني أكسيد النيتروجين","أكسيد الكبريت",1],
+["في المحلول الحمضي ..","[H⁺] = 10⁻⁹","[H⁺] = 10⁻¹⁴","[OH⁻] أصغر من [H⁺]","[OH⁻] أكبر من [H⁺]",2],
+["إذا كان [OH⁻] أكبر من [H⁺] فإن المحلول ..","حمضي","متعادل","قاعدي","متردد",2],
+["إذا كان مقياس pH لمحلول أكبر من 7 فإنه ..","حمضي","متعادل","قاعدي","مادة مترددة",2],
+["إذا كان [OH⁻] = 10⁻⁵ ؛ فأوجدي الرقم الهيدروجيني.","9","5","4","2",0],
+["حسب مقياس الحموضة pH يكون المحلول قاعدياً إذا كانت قيمة ..","pH = صفر","pH = 7","pH > 7","pH < 7",2],
+["متى يكون مقياس pH قاعدياً؟","pH < 7","pH > 7","pH = 0","pH = 7",1],
+["عندما تكون قيمة pH = 13 لمحلول، فإن ذلك يمثل ..","حمضاً قوياً","حمضاً ضعيفاً","قاعدة قوية","قاعدة ضعيفة",2],
+["يمكن أن يكون pH للحمض القوي ..","14","7","4","1",3],
+["إذا كانت قيمة pH لمحلول تساوي 2.0 ؛ فأي العبارات التالية صحيحة؟","المحلول أقرب للتعادل","المحلول حمضي","المحلول قاعدي","pOH أقل من 10",1],
+["قيمة pOH للقاعدة القوية ..","أقل من 7","تساوي 7","أكثر من 7","تساوي 14",0],
+["في الحليب: إذا كان pH = 6.5 فإن pOH يساوي ..","2.5","7.5","10.5","13.5",1],
+["عندما تكون قيمة pOH = 3 فإن [H⁺] يساوي ..","1 × 10⁻¹¹","1 × 10⁻⁸","11","3",0],
+["يقاس الرقم الهيدروجيني باستخدام ..","ورق تباع الشمس","المانومتر","الهيدرومتر","مقياس فتوري",0],
+["تفاعل التعادل من تفاعلات ..","التكوين","الإحلال المزدوج","الإحلال البسيط","الاحتراق",1],
+["تتغير قيمة الأس الهيدروجيني للماء عند إضافته للمحاليل التالية عدا ..","NaCl","HCl","CH₃COOH","NaOH",0],
+["مركب أيوني يتكوّن من أيون موجب قاعدي وأيون سالب حامضي ..","قاعدة","حمض","ملح","ماء",2],
+["تفاعل حمض مع قاعدة واستخدام أحدهما في معرفة تركيز الآخر يُدعى ..","معايرة","مولارية","مولالية","تميه",0],
+["محلول معروف التركيز يستعمل لمعايرة محلول مجهول التركيز ..","المحلول المشبع","المحلول فوق المشبع","المحلول القياسي","المحلول المركز",2],
+["في المعايرة: عند نقطة التكافؤ يكون عدد مولات H⁺ من الحمض .... عدد مولات OH⁻ من القاعدة.","أكبر من","يساوي","أصغر من","ليس له علاقة بـ",1],
+["عند نقطة نهاية المعايرة يتغير لون ..","الحمض","الكاشف","القاعدة","الملح",1],
+["عندما تتميه الأملاح فإن الشق السالب من الملح يكتسب ..","أيونات الهيدروجين","أيونات الهيدروكسيل","أيونات النيتروجين","أيونات الأكسجين",0],
+["أملاح تُنتج محاليل قاعدية تَنتُج عن ..","قاعدة ضعيفة وحمض قوي","قاعدة قوية وحمض ضعيف","قاعدة قوية وحمض قوي","قاعدة ضعيفة وحمض ضعيف",1],
+["محلول يقاوم تغير الرقم الهيدروجيني ..","المحلول المنظم","المحلول القياسي","المحلول الحمضي","المحلول القاعدي",0],
+["خليط من حمض ضعيف مع قاعدته المرافقة ..","المحلول المشبع","المحلول القياسي","المحلول المنظم","المحلول المركز",2],
+["ينتج من إضافة قاعدة ضعيفة إلى حمضها المرافق ..","المحلول القياسي","المحلول المخفف","المحلول المشبع","المحلول المنظم",3],
+["وفقاً لمبدأ لوتشاتلييه: إضافة حمض إلى المحلول المنظم .... قيمة pH.","لا تغير","تزيد","تقلل","تضاعف",0],
+["كمية الحمض أو القاعدة التي يستوعبها المحلول المنظم دون تغير pH ..","سعة المحلول المنظم","كثافة المحلول المنظم","تركيز المحلول المنظم","مولالية المحلول المنظم",0],
+["سعة المحلول المنظم .... تراكيز الجزيئات والأيونات فيه.","تزداد بنقصان","تزداد بزيادة","لا تتغير بزيادة","لا تتغير بنقصان",1]
+]},
+{t:"نظريات الذرة والجدول الدوري",i:"⚛️",h:"#6dffa0",q:[
+["أول من قال بوجود الذرات ..","أرسطو","ديمقريطس","دالتون","بور",1],
+["فكرة لا وجود للفراغ إحدى أفكار ..","طومسون","ديمقريطس","دالتون","أرسطو",3],
+["من فروض نظرية دالتون: المادة تتكون من ..","إلكترونات","بروتونات","نيوترونات","ذرات",3],
+["أصغر جزء من العنصر يحمل صفات العنصر ..","الإلكترون","البروتون","الذرة","النيوترون",2],
+["جسيمات سالبة تدور حول النواة ..","البروتونات","النيوترونات","الإلكترونات","الفوتونات",2],
+["الذرة كرة مكوّنة من شحنات موجبة تحوي إلكترونات سالبة ..","نموذج بور","نموذج رذرفورد","نموذج طومسون","نموذج دالتون",2],
+["وحدة الكتل الذرية تساوي تقريباً كتلة ..","الإلكترون","النواة","البروتون","الذرة",2],
+["متوسط جميع كتل نظائر العنصر الموجودة في الطبيعة ..","كتلة النيوترون","كتلة البروتون","كتلة الإلكترون","الكتلة الذرية",3],
+["النموذج الكمي للذرة يتعامل مع .... على أنها موجات.","البروتونات","النيوترونات","جسيمات ألفا","الإلكترونات",3],
+["السحابة الإلكترونية صورة لحظية لـ .... الإلكترون حول النواة.","حركة","طاقة","كتلة","حجم",0],
+["عدد الكم الذي يحدد طاقة المستويات ..","الرئيس","المداري","الثانوي","المغزلي",0],
+["أي الأعداد التالية صحيح لعدد الكم الرئيس n ؟","0 ، 1 ، 2 ، 3","1 ، 2 ، 3","−2 ، −1 ، 0 ، 1 ، 2","−½ ، 0 ، ½",1],
+["عدد الكم الرئيس للمستوى الثانوي 3d⁷ ..","21","10","7","3",3],
+["أقصى عدد من الإلكترونات يستوعبه مستوى الطاقة الأول ..","إلكترون","إلكترونين","3 إلكترونات","4 إلكترونات",1],
+["أقصى عدد من الإلكترونات يمكن أن تجديه في المستوى الثاني للذرة ..","2","4","8","16",2],
+["المستوى الفرعي الكروي الشكل هو ..","s","p","d","f",0],
+["المستويات الفرعية 3px ، 3py ، 3pz ..","متساوية الطاقة والحجم","متساوية الطاقة مختلفة الحجم","مختلفة الطاقة والحجم","مختلفة الطاقة متساوية الحجم",0],
+["كم مستوى فرعي للمستوى الثانوي p ؟","2","3","7","10",1],
+["أي المستويات التالية ليس في الذرة؟","3f","4s","5p","4d",0],
+["ما هو أقل المستويات التالية طاقة؟","3d","4s","4p","4f",1],
+["أي العناصر التالية توزيعه الإلكتروني 1s² 2s² 2p⁵ ؟","Ar (18)","F (9)","Al (13)","N (7)",1],
+["التوزيع الإلكتروني للعنصر Mg (12) في حالته المستقرة هو .. (العدد الذري لـ Ne = 10)","[Ne]3s²","[Ne]3s¹","[Ne]3s¹3p¹","[Ne]3s²3p¹",0],
+["التوزيع الإلكتروني للحالة المستقرة لعنصر عدده الذري 23 هو ..","[Ne]3s²3d³","[Ar]4s²3d³","[Kr]5s²4d³","[Xe]6s²5d³",1],
+["العنصر الذي يكافئ أيون Cl⁻ ..","Mg","Ca","Ar","Al",2],
+["التوزيع الإلكتروني لأيون النحاس Cu²⁺ ، علماً بأن Ar = 18 و Cu = 29 ..","[Ar]3d⁹","[Ar]4s²3d⁷","[Ar]4s²3d⁹","[Ar]4s²4d¹⁰4p¹",0],
+["الجدول الدوري الحديث يحوي ..","3 دورات و 15 مجموعة","6 دورات و 17 مجموعة","7 دورات و 18 مجموعة","5 دورات و 16 مجموعة",2],
+["أي التالية صحيح للتوزيع الإلكتروني [Ar]4s²3d¹⁰4p⁴ ؟","مجموعة 14 ، دورة 4 ، فئة d","مجموعة 16 ، دورة 3 ، فئة p","مجموعة 14 ، دورة 4 ، فئة p","مجموعة 16 ، دورة 4 ، فئة p",3],
+["التوزيع 1s² 2s² 2p³ لذرة عنصر يقع ضمن الدورة .... في الجدول الدوري.","الأولى","الثانية","الثالثة","الرابعة",1],
+["عنصر عدده الذري 7 يقع في الدورة ..","الأولى","الثانية","الثالثة","الرابعة",1],
+["عنصر الفوسفور P (15) يقع في الدورة ..","الثانية","الثالثة","الرابعة","الخامسة",1],
+["عنصر له التوزيع الإلكتروني 1s² 2s² 2p⁶ ، يكون في أي مجموعة ..","3","1","17","18",3],
+["جميع العناصر الموجودة في المجموعة الأولى بالجدول الدوري فلزات عدا ..","الليثيوم","الصوديوم","الهيدروجين","البوتاسيوم",2],
+["عنصر الماغنسيوم ينتمي لمجموعة ..","الفلزات القلوية","الفلزات القلوية الأرضية","الفلزات الانتقالية","الهالوجينات",1],
+["أي العناصر التالية ينتمي لمجموعة الفلزات الانتقالية؟","Mg","Na","Ca","Au",3],
+["ذرات الفلزات نشطة كيميائياً بسبب ..","سهولة فقدها للإلكترونات","سهولة اكتسابها للإلكترونات","حجمها الصغير","انتشارها في القشرة الأرضية",0],
+["تعد ذرة العنصر خاملة كيميائياً إذا ..","كانت درجة غليانها عالية","كانت طاقة تأينها منخفضة","كانت كهروسالبيتها عالية","وصلت للتركيب الثماني في مجالها الأخير",3],
+["تنتمي عناصر المجموعتين 1 ، 2 في الجدول الدوري الحديث إلى العناصر ..","الانتقالية","الانتقالية الداخلية","الممثلة","النبيلة",2],
+["المجموعة 17 في الجدول الدوري تعتبر ..","قلويات","قلويات أرضية","لانثنيدات","هالوجينات",3],
+["أي العناصر التالية أكثر استقراراً؟","Ne","Na","Ca","K",0],
+["أي العناصر التالية أكثر استقراراً وأقل في النشاط الكيميائي؟","Na (11)","O (8)","Ne (10)","Be (4)",2],
+["أي العناصر التالية له أقصر نصف قطر؟","Li (3)","Na (11)","K (19)","Rb (37)",0],
+["كلما اتجهنا لأسفل ضمن عناصر المجموعة الواحدة في الجدول الدوري ..","تقل كتلة الذرات","يزداد جهد التأين","تزداد الألفة الإلكترونية","يزداد الحجم الذري",3],
+["في الجدول الدوري الحديث بالانتقال إلى أسفل المجموعة ..","تنقص طاقة التأين","تزيد الكهروسالبية","ينقص نصف قطر الذرة","تنقص طاقة البلورة",0],
+["في المجموعة 17 (F ثم Cl ثم Br ثم I من الأعلى للأسفل) تكون لذرة الفلور F ..","نصف قطر أكبر","طاقة تأين أكبر","سالبية كهربية أقل","ألفة إلكترونية أقل",1],
+["أي العناصر التالية أقل في طاقة التأين؟ (I = 53 ، F = 9 ، Br = 35 ، Cl = 17)","F","Cl","Br","I",3],
+["أكبر العناصر في السالبية الكهربية هو عنصر ..","الكلور","السيزيوم","الفلور","الحديد",2],
+["أكثر العناصر كهروسالبية ..","القلويات","القلويات الأرضية","الغازات النبيلة","عناصر المجموعة 17",3],
+["عنصر الفلور له ..","أقل طاقة تأين","أكبر طاقة تأين","أقل كهروسالبية","لا شيء مما ذكر",1],
+["أقل العناصر التالية من حيث الكهروسالبية ..","الفرانسيوم","الكالسيوم","الصوديوم","الماغنسيوم",0]
+]},
+{t:"الحساب الكيميائي",i:"🧮",h:"#ff9f43",q:[
+["كم عدد مولات 66 g من CO₂ ؟ علماً أن C = 12 و O = 16","2.9","3.9","1.25","1.5",3],
+["ما كتلة الماء بالجرام في عينة من ملح مائي كتلتها 10 g ، تم تسخينها حتى تغير لونها وأصبحت كتلتها 9.2 g ؟","0.8","8","9.2","10",0],
+["كم تبلغ عدد مولات 20.0 g من البروم Br ؟ إذا علمتِ أن الكتلة المولية للبروم 80 g/mol","40.0","4.0","2.5","0.25",3],
+["عدد مولات الأمونيا الناتجة من تفاعل 3.0 mol من النيتروجين مع كمية كافية من الهيدروجين حسب التفاعل N₂ + 3H₂ → 2NH₃","2","3","5","6",3],
+["إذا كان C = 12 ، O = 16 ، H = 1 فإن الكتلة المولية لـ CH₃COOH ..","60 g/mol","90 g/mol","30 g/mol","10 g/mol",0],
+["عدد مولات الحديد في 6 mol من Fe₂O₃ ..","2","6","36","12",3],
+["أوجدي عدد مولات مادة كتلتها 120 g والكتلة المولية لها 30 g/mol","5","8","4","12",2],
+["كتلة الهيدروجين اللازمة للتفاعل مع النيتروجين حسب المعادلة N₂ + 3H₂ → 2NH₃ (علماً أن H = 1 ، N = 14)","1 g","2 g","6 g","12 g",2],
+["أبسط نسبة عددية صحيحة لعدد مولات العناصر بالمركب ..","الصيغة الجزيئية","الصيغة الأولية","الصيغة البنائية","الصيغة العددية",1],
+["تحول H₂O إلى H₂O₂ يمثل قانون ..","حفظ الطاقة","حفظ الكتلة","قانون النسب المتضاعفة","قانون النسب الثابتة",2],
+["أي المركبات التالية صيغته الأولية تمثل صيغته الجزيئية؟","H₂O₂","C₆H₁₂","H₂O","C₆H₆",2],
+["عند ثبات درجة الحرارة يتناسب حجم الغاز عكسياً مع ضغطه ..","قانون بويل","قانون كلفن","قانون شارل","قانون نيوتن",0],
+["غاز حجمه 70 cm³ عند ضغط 100 Pa ، ما حجمه عند ضغط 200 Pa مع ثبات درجة حرارته؟","15","35","140","210",1],
+["يتناسب حجم الغاز طردياً مع درجة الحرارة عند ثبات الضغط ..","قانون بويل","قانون شارل","قانون جاي لوساك","قانون حفظ الطاقة",1],
+["قانون شارل ..","V₁/T₁ = V₂/T₂","P₁V₁ = P₂V₂","P₁/T₁ = P₂/T₂","P₁V₁/T₁ = P₂V₂/T₂",0],
+["يشغل غاز حجماً مقداره 1 L عند درجة حرارة 100 K ، ما درجة الحرارة اللازمة لخفض الحجم إلى 0.5 L ؟","50 K","100 K","150 K","200 K",0],
+["استخدام أواني الضغط لطهي الطعام هو تطبيق عملي لقانون ..","شارل","بويل","جاي لوساك","العام للغازات",2],
+["إطار ضغط الهواء به 5 Pa عند درجة حرارة 200 K ، فإذا أصبحت درجة الحرارة 300 K فإن ضغط الإطار يساوي ..","7.5 Pa","10 Pa","12 Pa","15 Pa",0],
+["وعاءان عند نفس الضغط والحرارة: الأول به غاز A حجمه 1 L ، والثاني به غاز B حجمه 1000 mL ، إن عدد الجزيئات ..","أكبر في الوعاء A","أكبر في الوعاء B","في الوعاء B ضعف A","متساوٍ في الوعاءين A و B",3],
+["حاصل ضرب ضغط الغاز المثالي في حجمه مقسوماً على درجة حرارته بوحدة الكلفن يساوي مقداراً ثابتاً ..","القانون العام للغازات","قانون بويل","قانون شارل","قانون الغاز المثالي",0],
+["حاصل ضرب ضغط الغاز المثالي في حجمه يساوي عدد مولاته مضروباً في الثابت R ودرجة حرارته بوحدة الكلفن ..","قانون بويل","قانون شارل","قانون الغاز المثالي","القانون العام للغازات",2],
+["حجم وعاء يحوي 2.7 mol من الهيدروجين في الظروف المعيارية ..","44.8 L","60.48 L","67.2 L","89.6 L",1],
+["درجة الحرارة على مقياس كلفن التي تقابل 30 °C ..","373","323","313","303",3],
+["درجة الصفر المطلق في مقياس كلفن تعادل على مقياس سليزيوس ..","373","212","−32","−273",3],
+["درجة غليان الماء في مقياس كلفن ..","0 K","100 K","273 K","373 K",3],
+["أحد السوائل التالية يستخدم في مقاييس درجات الحرارة ..","البروم","اليود","الكحول","الكروم",2],
+["احسبي حجم النيتروجين اللازم للتفاعل مع 5 L من الأكسجين لإنتاج أكسيد ثنائي النيتروجين: 2N₂ + O₂ → 2N₂O","5 L","10 L","15 L","20 L",1],
+["أي النسب المولية للحديد في المعادلة الموزونة صحيح؟ 3Fe + 4H₂O → Fe₃O₄ + 4H₂","3 mol Fe / 2 mol Fe₃O₄","3 mol Fe / 2 mol H₂","1 mol Fe / 4 mol H₂","3 mol Fe / 4 mol H₂O",3],
+["المادة المحددة .... خلال التفاعل.","لا تستهلك","تستهلك كمية محدودة منها","يستهلك معظمها","تستهلك كاملةً",3],
+["مادة متفاعلة تبقى بعد انتهاء التفاعل ..","المادة المحددة","المادة الفائضة","المادة المذيبة","المادة المستهلكة",1],
+["كمية المادة الناتجة عند إجراء التفاعل الكيميائي عملياً ..","نسبة المردود المئوية","المردود الفعلي","النسبة المئوية بالكتلة","المردود النظري",1],
+["طاقة مخزّنة في المادة نتيجة تركيبها ..","الطاقة النووية","الطاقة الحرارية","الطاقة الحركية","طاقة الوضع الكيميائية",3],
+["الحرارة تنتقل من الجسم ..","الأسخن إلى الأبرد","الأبرد إلى الأسخن","الكبير إلى الصغير","الصغير إلى الكبير",0],
+["سبب استخدام نترات الأمونيوم في عمل كمادة باردة أنها ..","ماصة للحرارة","طاردة للحرارة","عازلة للحرارة","لا تتفاعل مع حرارة الجسم",0],
+["إذا كان التغير في المحتوى الحراري −2270 فإن نوع التفاعل ..","تبخر","تفكك","احتراق","تحلل",2],
+["أي التغيرات التالية طاردة للحرارة؟","تحول 1 g من الماء إلى بخار عند 100 °C","تحول 1 g من الماء إلى ثلج عند 0 °C","تحول 1 g من الماء إلى ثلج عند 20 °C","ذوبان الأيس كريم في درجة حرارة الغرفة",1],
+["الحرارة المنطلقة عن تكثف 2.3 mol من غاز الأمونيا إلى سائل عند درجة غليانه؟ علماً أن ΔH(تكثيف) = −24 kJ","−55.2 kJ","−102 kJ","−43.5 kJ","−10.12 kJ",0],
+["حرارة التبخر المولارية تكفي لتبخر .... من السائل.","4.3 mol","3 mol","2.5 mol","1 mol",3],
+["حرارة التفاعل تعتمد فقط على خواص المواد المتفاعلة والناتجة، ولا تتأثر بالطريق الذي يسلكه التفاعل ..","بويل","جاي لوساك","هس","هنري",2],
+["في التفاعل S + O₂ → SO₂ و ΔH = −300 kJ ، احسبي المحتوى الحراري لاحتراق 2 mol من الكبريت.","−300 kJ","−450 kJ","−600 kJ","−750 kJ",2],
+["التغير في المحتوى الحراري الذي يرافق تكون مول واحد من المركب في الظروف القياسية من عناصره في حالاتها القياسية يسمى ..","حرارة الاحتراق","قانون هس","حرارة الانصهار المولارية","حرارة التكوين القياسية",3],
+["حرارة التكوين للعنصر في حالته القياسية تساوي ..","0 kJ/mol","1 kJ/mol","2 kJ/mol","3 kJ/mol",0],
+["احسبي ΔH للتفاعل 2H₂ + S₂ → 2H₂S ، علماً أن حرارة تكوين H₂S = −21 kJ ، وحرارة تكوين S₂ و H₂ = 0","10.5 kJ","−21 kJ","−42 kJ","84 kJ",2]
+]},
+{t:"سرعة التفاعل والاتزان الكيميائي",i:"⏱️",h:"#ff5a7e",q:[
+["معدل التغير في تركيز المواد المتفاعلة أو الناتجة في وحدة الزمن ..","الاتزان الكيميائي","المادة المحفزة","التعادل","سرعة التفاعل",3],
+["احسبي سرعة التفاعل H₂ + Cl₂ → 2HCl ، علماً أن تركيز H₂ في بداية التفاعل 0.9 M ثم أصبح 0.1 M بعد مرور 4 s","0.1 mol/L.s","0.2 mol/L.s","0.3 mol/L.s","0.4 mol/L.s",1],
+["أي مما يلي ليس من شروط نظرية التصادم؟","طاقة كافية للتصادم","التصادم يكون بالاتجاه الصحيح","ثبوت درجة الحرارة","يجب أن تتصادم المتفاعلات",2],
+["أي التالية صحيح للتصادم المثمر في التفاعلات الكيميائية؟","لا ينتج عنه تفاعل","يحدث للنواتج","من العوامل المحفزة","من شروط بدء التفاعل",3],
+["المعقد المنشط ..","عامل محفز","حالة غير مستقرة","حالة مستقرة","من النواتج",1],
+["في التفاعل الطارد للحرارة: طاقة النواتج .... طاقة المواد المتفاعلة.","ليس لها علاقة بـ","أصغر من","تساوي","أكبر من",1],
+["في التفاعل الماص للحرارة: طاقة إنتاج المتفاعلات .... طاقة التفاعل الأمامي.","تساوي نصف","تساوي ثلثي","تساوي","أكبر من",3],
+["أي العوامل التالية لا يؤثر في سرعة التفاعل؟","طبيعة المتفاعلات","طبيعة النواتج","درجة الحرارة","المحفزات والمثبطات",1],
+["أحد العوامل التالية يزيد من سرعة التفاعل ..","نقص تركيز أحد المتفاعلات","نقص تركيز أحد النواتج","زيادة تركيز أحد المتفاعلات","زيادة تركيز أحد النواتج",2],
+["تشتعل 1 kg من نشارة الخشب أسرع من 1 kg من قطعة خشب بسبب ..","درجة الحرارة","التركيز","مساحة السطح","التركيب الكيميائي",2],
+["تضاف المواد الحافظة في صناعة الأغذية لكي ..","تقلل طاقة التنشيط أثناء التفاعل","تزيد قيمة الطاقة الناتجة من احتراق الغذاء","تساعد على عملية أكسدة الغذاء","تعمل كمثبط للتفاعل بين المواد",3],
+["سرعة التفاعل .... تركيز المتفاعلات.","تتناسب طردياً مع","تتناسب عكسياً مع","تتناسب طردياً مع مربع","ليس لها علاقة بـ",0],
+["ثابت سرعة التفاعل يتغير بتغير ..","تركيز المتفاعلات","تركيز النواتج","درجة الحرارة","العامل المحفز",2],
+["أي الوحدات التالية لا تستخدم لقياس ثابت سرعة التفاعل؟","L/mol.s","L/mol","s⁻¹","L²/mol².s",1],
+["سرعة التفاعل الابتدائية تكون لحظة ..","إضافة المتفاعلات","إضافة العامل المحفز","منتصف التفاعل","الحصول على النواتج",0],
+["أُس تركيز المادة المتفاعلة A في معادلة سرعة التفاعل ..","تركيز المادة A","معامل المادة A","رتبة تفاعل المادة A","العدد الذري للمادة A",2],
+["الكثير من التفاعلات التي تحوي أكثر من مادة متفاعلة ليست من ..","الرتبة الأولى","الرتبة الثانية","الرتبة الثالثة","الرتبة الرابعة",0],
+["ما رتبة التفاعل R = k[A]¹[B]² ؟","الأولى","الثانية","الثالثة","الرابعة",2],
+["إذا كانت رتبة تفاعل المادة A تساوي صفراً فإن تغير تركيزها ..","يزيد سرعة التفاعل","يُنقص سرعة التفاعل","يُوقف التفاعل","لا يؤثر على التفاعل",3],
+["تفاعل يحدث في الاتجاهين الأمامي والعكسي ..","التفاعل المكتمل","التفاعل العكسي","التفاعل غير المكتمل","التفاعل غير المتزن",1],
+["حالة تتساوى فيها سرعتا التفاعل الأمامي والعكسي تمثل ..","الاتزان الكيميائي","المعقد النشط","التساوي","التفاعل القياسي",0],
+["في حالة الاتزان الكيميائي تكون سرعتا التفاعل الأمامي والعكسي ..","عالية","صفر","متساوية","مختلفة",2],
+["قانون الاتزان للتفاعل 2H₂O₂(g) ⇌ 2H₂O(g) + O₂(g) يساوي ..","Keq = [O₂]","Keq = [H₂O]²[O₂]","Keq = [O] / [H₂O₂]²","Keq = [H₂O]²[O₂] / [H₂O₂]²",3],
+["احسبي قيمة Keq للاتزان N₂O₄ ⇌ 2NO₂ علماً أن [NO₂] = 2 mol/L و [N₂O₄] = 1 mol/L","1","2","¼","4",3],
+["القيمة العددية لنسبة تراكيز النواتج إلى تراكيز المتفاعلات ..","رتبة التفاعل","ثابت سرعة التفاعل","ثابت اتزان التفاعل","مردود التفاعل",2],
+["إذا كان تركيز المتفاعلات أكبر من تركيز النواتج عند الاتزان فإن ..","Keq < 1","Keq = 1","Keq > 1","Keq ≥ 1",0],
+["إذا كانت قيمة Keq للتفاعل 2H₂S ⇌ 2H₂ + S كبيرة، فإن ذلك يعني أن ..","التفاعل لا يمكن حدوثه","تراكيز المواد الناتجة أكبر","تراكيز المواد المتفاعلة أكبر","التفاعل بطيء جداً",1],
+["العامل الوحيد الذي يغير من قيمة ثابت الاتزان ..","الضغط والحجم","التركيز","درجة الحرارة","العامل المحفز",2],
+["إذا كانت المتفاعلات والنواتج حالاتها الفيزيائية مختلفة فإن التفاعل ..","في حالة اتزان متجانس","في حالة اتزان غير متجانس","في حالة توقف","مكتمل",1],
+["تعبير ثابت الاتزان للمعادلة 2H₂O₂(l) ⇌ 2H₂O(g) + O₂(g) ..","Keq = [H₂O]²[O₂] / [H₂O₂]²","Keq = [H₂O]²[O₂]","Keq = [H₂O₂]²","Keq = 1 / [H₂O₂]",1],
+["واحد من الخواص التالية ليس من خواص الاتزان ..","تظل درجة الحرارة ثابتة","التفاعل يتم في نظام مغلق","يزداد حجم التفاعل","النواتج والمتفاعلات في اتزان",2],
+["أي العوامل التالية من العوامل المؤثرة في الاتزان الكيميائي؟","التغير في الضغط والحجم","التغير في التركيز","التغير في درجة الحرارة","جميع ما سبق",3],
+["ما أثر ارتفاع درجة الحرارة للتفاعل المتزن N₂O₄ + 55.3 kJ ⇌ 2NO₂ ؟","زيادة كمية NO₂","نقص كمية NO₂","زيادة كمية N₂O₄","نقص في قيمة kJ",0],
+["في التفاعل A + B ⇌ C + D + حرارة ، ماذا سيحدث لو اتجه الاتزان إلى اليسار؟","تنقص درجة الحرارة","تزداد درجة الحرارة","تزداد النواتج","تنقص المتفاعلات",0],
+["سحب الحرارة من تفاعل متزن طارد للحرارة يُغيّر حالة الاتزان نحو ..","اليسار فتزداد النواتج","اليمين فتزداد النواتج","اليسار فتزداد المتفاعلات","اليمين فيتوقف التفاعل",1],
+["ماذا يحدث عند زيادة درجة الحرارة في التفاعل PCl₅ ⇌ PCl₃ + Cl₂ + حرارة ؟","يزداد تركيز PCl₅","يزداد تركيز Cl₂","يزداد تركيز PCl₃","تزداد قيمة Keq",0],
+["ثابت الاتزان للمركبات قليلة الذوبان ..","ثابت الاتزان المنخفض","ثابت سرعة التفاعل","ثابت بولتزمان","ثابت حاصل الذوبانية",3],
+["مقدار Ksp الصغير يعني أن النواتج .... تراكيزها عند الاتزان.","تزداد","لا تزداد","تنقص","لا تنقص",1],
+["إذا خلط حجمان متساويان من محلولين فإن تركيز الأيونات ..","يتلاشى","يتضاعف","ينقص بمقدار النصف","ينقص بمقدار الثلث",2],
+["إذا كان Qsp < Ksp فإن المحلول ..","غير مشبع ويتكون راسب","غير مشبع ولا يتكون راسب","مشبع ويتكون راسب","مشبع ولا يتكون راسب",1],
+["في أي حالة من الحالات التالية يتكون راسب؟","Qsp = Ksp","Qsp ≈ Ksp","Qsp > Ksp","Qsp < Ksp",2],
+["تأثير الأيون المشترك ..","انخفاض الذوبانية","رفع درجة الحرارة","انخفاض الضغط","زيادة الحجم",0]
+]},
+{t:"الكيمياء الكهربية",i:"🔋",h:"#3ee6ff",q:[
+["إذا حدثت عملية أكسدة لعنصر فإن عدد التأكسد له ..","يساوي صفر","لا يتغير","يقل","يزداد",3],
+["ماذا يحدث للعامل المؤكسد؟","يُختزل","يتأكسد","يزيد عدد تأكسده","لا يحدث شيء",0],
+["أيّ التفاعلات التالية تفاعل أكسدة؟","I₂ → 2I⁻","Cl₂ → 2Cl⁻","Ag⁺ → Ag","Fe²⁺ → Fe³⁺",3],
+["يُعد العنصر عاملاً مؤكسداً قوياً إذا ..","وصل للتركيب الثماني","كانت كهروسالبيته مرتفعة","كانت طاقة تأينه منخفضة","كانت درجة غليانه مرتفعة",1],
+["ما الذي حدث للكلور في التفاعل Cl₂ + 2e⁻ → 2Cl⁻ ؟","أكسدة","اختزال","تعادل","لم يحدث شيء",1],
+["القطب الذي تحدث له عملية أكسدة في التفاعل 2Al + 3Sn²⁺ → 2Al³⁺ + 3Sn ..","Sn(s)","Al(s)","Sn²⁺(aq)","Al³⁺(aq)",1],
+["أي العبارات التالية تعبّر عن نصف التفاعل Fe → Fe²⁺ + 2e⁻ ؟","الحديد عامل مختزل","ذرة الحديد اكتسبت إلكترونين","الحديد عامل مؤكسد","يمثل نصف تفاعل اختزال",0],
+["ما العامل المختزِل في التفاعل H₂S + Cl₂ → S + 2HCl ؟","H₂","Cl₂","H₂S","HCl",2],
+["في التفاعل 2Na + Br₂ → 2NaBr ، العامل المؤكسد ..","Na⁺","Na","Br₂","NaBr",2],
+["ما نوع عنصر عدد التأكسد فيه موجب؟","غاز نبيل","فلز","لافلز","شبه فلز",1],
+["عنصر تكافؤه يساوي (+2) يصنف هذا العنصر على أنه ..","لافلز","فلز","شبه فلز","خامل",1],
+["ما عدد تأكسد النيتروجين في HNO₃ ؟","−5","+5","−3","+3",1],
+["عدد التأكسد لعنصر N في مركب HNO₂ يساوي ..","−2","+2","+5","+3",3],
+["عدد تأكسد الحديد في المركب Fe(OH)₃ ..","+1","−1","−3","+3",3],
+["عدد تأكسد الكروم في المركب K₂CrO₄ ..","+3","−5","−3","+6",3],
+["عدد تأكسد الأكسجين في المركب H₂O₂ ..","0","+1","−1","+2",2],
+["عدد تأكسد الكبريت في SO₂ ..","+4","−4","+2","−2",0],
+["عدد أكسدة عنصر الألومنيوم Al (13) يساوي ..","−3","+1","+2","+3",3],
+["عدد الأكسدة لذرة النيون Ne (10) يساوي ..","10","8","6","0",3],
+["علم يدرس تحويل الطاقة الكيميائية إلى كهربية خلال عمليات الأكسدة ..","الكيمياء التحليلية","الكيمياء الذرية","الكيمياء الحيوية","الكيمياء الكهربائية",3],
+["في الخلية الكهروكيميائية: الكاثود قطب يحدث عنده تفاعل ..","التحلل","التعادل","الاختزال","الأكسدة",2],
+["الأيونات الموجبة والسالبة تنتقل بالخلية الجلفانية عبر ..","المهبط","المصعد","السلك","القنطرة الملحية",3],
+["الخلية الجلفانية نوع من الخلايا ..","الكهرومغناطيسية","الكهروكيميائية","الكهروحرارية","الكيميائية",1],
+["ينشأ التيار الكهربائي من خلال التفاعل الكيميائي في ..","عملية مقاومة المعادن للتآكل","الخلايا التحليلية","عملية الطلاء المعدني","الخلايا الجلفانية",3],
+["طاقة تدفع الإلكترونات من أنود الخلية الكهروكيميائية إلى كاثودها ..","طاقة الوضع الكهربية","جهد الكاثود","جهد الأنود","فرق جهد الخلية الجلفانية",3],
+["جهد الاختزال هو قابلية المادة ..","للتحلل","لاكتساب إلكترونات","لفقد إلكترونات","للتأكسد",1],
+["جهد الاختزال القياسي لقطب الهيدروجين ..","0 V","1 V","−1 V","−1.1 V",0],
+["أي المعادلات التالية تمثل معادلة جهد الخلية؟","E = E(كاثود) + E(أنود)","E = E(أنود) − E(كاثود)","E = E(أنود) + E(كاثود)","E = E(كاثود) − E(أنود)",3],
+["احسبي جهد الخلية Sn + Cu²⁺ → Sn²⁺ + Cu علماً أن جهد Sn²⁺ = −0.1 V وجهد Cu²⁺ = +0.3 V","0.1 V","0.2 V","0.3 V","0.4 V",3],
+["إذا كان التفاعل تلقائياً فيجب أن يكون جهد الخلية ..","سالباً","موجباً","عالياً","منخفضاً",1],
+["إذا كان جهد Sn²⁺ = −0.1 V وجهد Cu²⁺ = +0.3 V فإن تفاعل الخلية Sn + Cu²⁺ → Sn²⁺ + Cu ..","تلقائي","غير تلقائي","عكسي","غير مكتمل",0],
+["خلية جلفانية أو أكثر في عبوة واحدة تنتج التيار الكهربائي ..","الخلية الحرارية","الخلية المغناطيسية","البطارية","الخلية الكهرومائية",2],
+["في بطارية الخارصين والكربون الكاثود هو ..","عمود الكربون","الخارصين","ملف نحاسي","KOH",0],
+["مسحوق الخارصين Zn المخلوط مع هيدروكسيد البوتاسيوم KOH يمثل الأنود في ..","بطارية الليثيوم","بطارية الفضة","الخلية الجلفانية","بطارية المركم الرصاصي",1],
+["لإنتاج طاقة كهربائية عن طريق تفاعل أكسدة واختزال عكسي نستخدم ..","البطارية القلوية","الخلية الجافة","البطارية الثانوية","بطارية الفضة",2],
+["خلية تعتمد في تفاعلها على تفاعل الأكسدة والاختزال العكسي ..","البطارية القلوية","بطارية الفضة","الخلية الجافة","البطارية الثانوية",3],
+["خسارة الفلز الناتجة عن تفاعل أكسدة واختزال بين الفلز والمواد التي في البيئة ..","التأين","الجلفنة","التآكل","التحلل",2],
+["تغليف الحديد بفلز أكثر مقاومةً للتأكسد ..","التحلل","الترويق","التأين","الجلفنة",3],
+["استعمال الطاقة الكهربائية لإحداث تفاعل كيميائي ..","التكرير","التحليل الكهربي","التقطير","الجلفنة",1],
+["أي التطبيقات التالية ليست من تطبيقات التحليل الكهربي؟","خلية داون","عملية هول هيرولت","الهلجنة","الطلاء بالكهرباء",2],
+["للحصول على الكلور نستخدم ..","خلية داون","عملية الجلفنة","عملية هول هيرولت","تفاعل الهلجنة",0]
+]},
+{t:"الهيدروكربونات",i:"⬡",h:"#b46dff",q:[
+["قسم من الكيمياء يهتم بدراسة الكربون ومركباته ..","التحليلية","العضوية","الحيوية","الفيزيائية",1],
+["ما عدد الروابط التي يكونها الكربون مع غيره من الذرات؟","4","3","2","5",0],
+["أقصى عدد من ذرات الهيدروجين يمكن أن يرتبط بذرة كربون واحدة ..","2","3","4","6",2],
+["أي المركبات التالية من الألكانات؟","CH₃Cl","C₂H₂","C₂H₆","C₄H₉OH",2],
+["أي المركبات التالية غير مشبع؟","CH₄","C₂H₂","C₂H₆","C₄H₁₀",1],
+["فصل النفط إلى مكونات أبسط بتكثيفها عند درجات حرارة مختلفة ..","التكسير الحراري","البلمرة","التقطير التجزيئي","التبخير السطحي",2],
+["أي العمليات التالية تتم في غياب الأكسجين ووجود عامل مساعد؟","البلمرة","التكسير الحراري","التقطير التجزيئي","التبخير السطحي",1],
+["الروابط بين ذرات الكربون في الألكانات ..","أيونية","تناسقية","ثنائية","أحادية",3],
+["الألكانات ..","لا تذوب في الماء لأنها غير قطبية","لا تذوب في الماء لأنها قطبية","تذوب في الماء لأنها غير قطبية","تذوب في الماء لأنها قطبية",0],
+["الصيغة الجزيئية للميثان ..","C₂H₂","CH₄","C₄H₁₀","C₈H₁₈",1],
+["الصيغة الجزيئية للإيثان ..","CH₄","C₂H₂","C₂H₄","C₂H₆",3],
+["صيغة البروبان ..","CH₃CH₂CH₂CH₂CH₃","CH₃CH₂CH₂CH₃","CH₃CH(CH₃)₂","CH₃CH₂CH₃",3],
+["الصيغة البنائية المكثفة للبروبيل ..","−CH₃","−CH₂CH₃","−CH₂CH₂CH₃","−CH₂CH₂CH₂CH₃",2],
+["صيغة الأيزوبيوتان ..","CH₃CH₃","CH₃CH₂CH₃","CH₃CH(CH₃)₂","CH₃CH₂CH₂CH₂CH₃",2],
+["الصيغة البنائية المكثفة CH₃(CH₂)₅CH₃ تُسمى ..","بنتان","هكسان","هبتان","أوكتان",2],
+["أي الصيغ التالية تمثل صيغة 2-ميثيل بيوتان؟","CH₃CH=CHCH₃","CH₃CH(CH₃)CH₂CH₃","CH₃CH(CH₃)CH₃","CH₃CH=CHCH=CH₂",1],
+["الصيغة البنائية للمركب (2،2-ثنائي ميثيل بنتان) ..","C₂H₅–C(CH₃)(C₂H₅)–CH₂CH₃","CH₃–C(CH₃)₂–CH₂–CH₂–CH₃","CH₃–C(CH₃)₂–CH₂CH₃","CH₃–CH(CH₃)–CH₂CH₂CH₂CH₃",1],
+["الألكينات تحوي .... أو أكثر بين ذرات الكربون.","رابطة أحادية","رابطة ثنائية","رابطة ثلاثية","رابطة رباعية",1],
+["الصيغة العامة للألكينات ..","CₙH₂ₙ","CₙH₂ₙ₊₁","CₙH₂ₙ₊₂","CₙH₂ₙ₋₂",0],
+["المركب CH₃CH=CHCH=CH₂ يُسمى ..","1،3-بنتاداين","1،3-بيوتاداين","1،3-بنتين","1،3-بيوتين",0],
+["اسم المركب CH₃CH=CHCH(CH₃)CH₃ ..","ميثيل بنتين","ميثيل بنتاين","4-ميثيل-2-بنتين","4-ميثيل-2-بنتاين",2],
+["أي المركبات التالية يحوي رابطة ثلاثية؟","C₂H₂","C₂H₄","C₂H₆","C₃H₇",0],
+["هيدروكربون له نفس نوع الهيدروكربون ذي الصيغة الجزيئية C₃H₄ ..","C₂H₆","C₃H₆","C₄H₈","C₂H₂",3],
+["أي المركبات التالية يصنف ضمن الألكاينات؟","CH₃CH₂","CH₃CH₃","CH₂CH₂","C₂H₂",3],
+["المركب CH₃CH₂C≡CH يُسمى ..","1-بيوتاين","2-بيوتاين","1-بيوتين","2-بيوتين",0],
+["ظاهرة وجود أكثر من صيغة بنائية لنفس الصيغة الجزيئية تُسمى بظاهرة ..","التشكل","النمذجة","التآصل","التشابه",0],
+["المتشكلات الناتجة عن اختلاف ترتيب المجموعات واتجاهها حول الرابطة الثنائية تُسمى ..","متشكلات ضوئية","متشكلات فراغية","متشكلات بنائية","متشكلات هندسية",3],
+["أي المصطلحات التالية يصف بدقة L-أنيلين و D-أنيلين، أحدهما بالنسبة إلى الآخر؟","متشكلات بنائية","متشكلات هندسية","متشكلات ضوئية","متشكلات فراغية",2],
+["المتشكلات الضوئية تتشابه في ..","الخواص الفيزيائية فقط","الخواص الكيميائية فقط","الخواص الكيميائية والفيزيائية","الصيغة البنائية",2],
+["أي التالية ليست من أنواع المتشكلات؟","المتشكلات الجزيئية","المتشكلات الفراغية","المتشكلات الضوئية","المتشكلات الهندسية",0],
+["مركب عضوي به حلقة بنزين ..","الهيدروكربون الأروماتي","الهيدروكربون الأليفاتي","الألكان","الألكين",0],
+["البنزين يعتبر من ..","المركبات الأليفاتية","المركبات الأروماتية","الكربيدات","الكربونات",1],
+["المركب C₆H₅CH₂CH₃ (حلقة بنزين متصلة بمجموعة إيثيل) اسمه ..","البنزين","الميثيل بنزين","الإيثيل بنزين","البروبيل بنزين",2],
+["المركب C₆H₅CH₃ (حلقة بنزين متصلة بمجموعة ميثيل) يسمى ..","البنزين","بروبيل بنزين","إيثيل بنزين","التولوين",3],
+["مادة مسرطنة توجد في سناج المداخن ..","التولوين","الفاليوم","الجلايسين","البنزوبايرين",3]
+]},
+{t:"مشتقات الهيدروكربونات",i:"🧴",h:"#ffd166",q:[
+["أبسط مجموعة وظيفية ترتبط مع الهيدروكربونات ..","الهالوجينات","الهيدروكسيل","الأكسجين","الأمين",0],
+["الصيغة العامة لهاليدات الألكيل ..","R–X","R–OH","R–COOH","R–O–R",0],
+["اسم المركب CH₃CH(Cl)CH₂CH₃ ..","3-كلورو بروبان","2-كلورو بيوتان","3-كلورو بيوتان","2-كلورو بروبان",1],
+["اسم المركب C₆H₅Cl (ذرة كلور على حلقة بنزين) ..","البنزين","الميثيل بنزين","كلورو بنزين","كلوريد البنزيل",2],
+["المركب الذي له أعلى درجة غليان ..","1-فلورو البنتان","1-كلورو البنتان","1-برومو البنتان","1-أيودو البنتان",3],
+["أي المشتقات الهيدروكربونية التالية له الصيغة العامة R–OH ؟","الكيتون","الكحول","الأمين","الحمض الكربوكسيلي",1],
+["المركب الأكثر قابلية للذوبان في الماء هو ..","CH₃COCH₃","CH₃CH₂CHO","CH₃CH₂CH₂OH","CH₃CH₂OCH₃",2],
+["المجموعة الوظيفية في الكحولات ..","R–OH","ROOR","R–NH₂","RCOOH",0],
+["المركب الناتج من إضافة الماء إلى الإيثيلين ..","CH₃CH₂OH","CH₃CH₃","CH₃CHO","CH₃COOH",0],
+["أي الصيغ التالية يصنف على أساس أنه كحول؟","CH₃–O–CH₃","CH₃COCH₃","CH₃CH₂OH","CH₃COOH",2],
+["أي الصيغ الكيميائية التالية للإيثانول؟","CH₃CH₃","CH₃CHO","CH₃CH₂OH","OHCH₃CO",2],
+["اسم المركب CH₃CH(OH)CH₂CH₃ بطريقة IUPAC ..","بيوتانال","1-بيوتانول","بيوتانول","2-بيوتانول",3],
+["كحول يحوي أكثر من مجموعة هيدروكسيل ..","الميثانول","الجليسرول","البيوتانول","الهكسانول",1],
+["أيٌّ مما يلي لا ينطبق على الكحولات؟","تذوب في الماء","تكوّن روابط هيدروجينية","لا تذوب في الماء","درجة غليانها مرتفعة",2],
+["أي الصيغ التالية تمثل الصيغة العامة للإيثر؟","R–O–R′","R–OH","R–COO–R′","R–COOH",0],
+["المركب الذي لا يكوّن روابط هيدروجينية بين جزيئاته ..","CH₃–O–CH₃","CH₃CH₂–OH","CH₃COOH","CH₃CH₂–NH₂",0],
+["إلى أي المجموعات العضوية التالية ينتمي المركب CH₃–O–C₂H₅ ؟","الكحولات","الأحماض العضوية","الإيثرات","الأمينات الأولية",2],
+["يمكن تسمية المركب العضوي CH₃–O–CH₃ ..","الإيثر الإيثيلي","ميثيل إيثيل إيثر","ثنائي ميثيل إيثر","إيثيل ميثيل إيثر",2],
+["ما اسم المركب CH₃–CH₂–CH₂–CH=CH–CH(CH₃)–CH₃ حسب قواعد IUPAC ؟","2-ميثيل-3-هبتين","6-ميثيل-4-هبتين","3-ميثيل-4-هبتين","6-ميثيل-3-هبتين",0],
+["المركب العضوي CH₃CH₂–O–CH₃ يُسمى ..","الإيثر البيوتيلي","ميثيل بروبيل إيثر","ثنائي بروبيل إيثر","إيثيل ميثيل إيثر",3],
+["المجموعة الوظيفية في CH₃–NH₂ ..","الإيثر","الأمين","الكحول","الحمض الكربوكسيلي",1],
+["تُستخدم الكلاب للعثور على رفات البشر عند الكوارث بسبب وجود ..","الأمينات","الكحول","الإستر","الأحماض العضوية",0],
+["رائحة الكائنات الميتة والمتحللة تتسبب فيها ..","الكحولات","الألدهيدات","الأمينات","الأميدات",2],
+["المجموعة الوظيفية في الألدهيدات ..","الأمين","الأميد","الكربونيل","الهيدروكسيل",2],
+["مجموعة الكربونيل: ذرة كربون مرتبطة بذرة ..","أكسجين برابطة ثنائية","أكسجين برابطة أحادية","نيتروجين برابطة ثنائية","نيتروجين برابطة أحادية",0],
+["ذوبانية الألدهيدات في الماء أقل من ذوبانية ..","الكحولات","البروتينات","الإيثرات","الببتيدات",0],
+["اسم المركب HCHO ..","بروبانالدهيد","أسيتالدهيد","فورمالدهيد","بنزالدهيد",2],
+["اسم المركب C₆H₅CHO ..","فورمالدهيد","أسيتالدهيد","بروبانالدهيد","بنزالدهيد",3],
+["يُستعمل لعمليات التخزين لسنوات طويلة ..","الفورمالدهيد","الأسيتالدهيد","السينامالدهيد","الساليسالدهيد",0],
+["المركب CH₃–CO–CH₂CH₃ ينتمي إلى مجموعة ..","الكحولات","الإسترات","الألدهيدات","الكيتونات",3],
+["المجموعة الوظيفية في المركب CH₃–CO–CH₃ ..","هيدروكسيل","كربوكسيل","هاليد","كربونيل",3],
+["مجموعة الكربونيل الوظيفية توجد في المجموعات العضوية التالية عدا ..","الأميدات","الكيتونات","الإسترات","الإيثرات",3],
+["أي المركبات التالية تستخدم مذيبات شائعة للمواد القطبية؟","الكيتونات","الأميدات","الأحماض الكربوكسيلية","الإسترات",0],
+["ماذا ينتج عن اختزال الأسيتون؟","2-بروبانون","بروبانالدهيد","2-بروبانول","بروبانويك",2],
+["عند أكسدة 2-بروبانول ينتج ..","2-بروبانون","2-بروبانالدهيد","2-بروبانويك","بروبانويك",0],
+["يصنف المركب العضوي CH₃–COOH من ..","الكحولات","الألدهيدات","الأحماض الكربوكسيلية","الكيتونات",2],
+["أي التالي يصنف من ضمن الحموض الكربوكسيلية؟","CH₃CH₂COOH","CH₃CH₂CHO","CH₃COOCH₃","CH₃CH₂CH₂OH",0],
+["الحمض الموجود في الخل ..","الميثانويك","الإيثانويك","البروبانويك","البيوتانويك",1],
+["اسم المركب CH₃–CO–OH ..","حمض الخل","الأسيتون","الميثانول","الأسيتالدهيد",0],
+["يدافع النمل عن نفسه بإفراز حمض ..","الإيثانويك","الميثانويك","البيوتانويك","البروبانويك",1],
+["أي المركبات التالية حمض كربوكسيلي؟","CH₃CHO","CH₃COOCH₃","CH₃COCH₃","CH₃COOH",3],
+["مركبان: الأول CH₃–COOH والثاني C₃H₇–COOH متشابهان في ..","الصيغة الأولية","الصيغة الجزيئية","الكتلة المولية","الخواص الكيميائية",3],
+["يُطلق على حمضي الأكساليك والأديبيك ..","أحماض أمينية","نيوكليوتيد","ثنائي الحمض","فوق حمضي",2],
+["الصيغة العامة للإسترات ..","RCOOR′","RCOOH","RCOR","HCOR",0],
+["أي المركبات التالية لا تحوي مجموعة كربونيل؟","الألدهيدات","الكيتونات","الأحماض الكربوكسيلية","الكحولات",3],
+["الصيغة المكثفة لهكسانوات الميثيل ..","CH₃(CH₂)₄COOCH₃","CH₃(CH₂)₂COOCH₃","CH₃(CH₂)₄COCH₃","CH₃(CH₂)₄COCH₂CH₃",0],
+["أي المركبات التالية تكوّن جزيئاتها روابط هيدروجينية فيما بينها؟","CH₃OCH₂CH₃","CH₃CH₂CHO","CH₃COCH₃","CH₃CH₂COOH",3],
+["أي المركبات التالية يذوب أكثر في الماء؟","ألدهيد","إيثر","كحول","أمين",2],
+["المركب الأعلى في درجة الغليان ..","CH₃CH₂COOH","CH₃CH₂OCH₃","CH₃CH₂NH₂","CH₃Cl",0],
+["إلى أي المجموعات العضوية تنتمي الصيغة العامة R–CO–NHR ؟","الكحولات","الإسترات","الكيتونات","الأميدات",3],
+["الصيغة البنائية المكثفة للأسيتاميد ..","CH₃CH₂CONH₂","CH₃CONH₂","CH₃CONHCH₃","CH₃CH₂CH₂CONH₂",1],
+["نوع المركب CH₃CONH₂ ..","أميد","إستر","أمين","حمض كربوكسيلي",0],
+["نوع التفاعل CH₃–CH₃ → CH₂=CH₂ + H₂ ..","استبدال","أكسدة واختزال","حذف","إضافة",2],
+["ينتج عن أكسدة المركب CH₃CHO ..","CH₃COOH","CH₃CH₂OH","CH₃OCH₃","CH₃COCH₃",0],
+["ما التفاعل الذي يحول الكحول إلى ألكين؟","إضافة","حذف","استبدال","هلجنة",1],
+["أكسدة كحول أولي تعطي ..","كيتون","حمض كربوكسيلي","ألدهيد","أميد",2],
+["إضافة الهيدروجين إلى الألكين ينتج عنه ..","ألكاين","ألكان","ألكين","ألكيل",1],
+["ماذا ينتج عند إضافة الماء إلى البروبين بمساعدة حمض الكبريتيك المركز؟","كيتون","فينول","ألكان","كحول",3],
+["تفاعل الإيثان مع الكلور (الهلجنة) هو تفاعل ..","إضافة","استبدال","هدرجة","تفكك",1],
+["نوع التفاعل C₂H₆ + Cl₂ → C₂H₅Cl + HCl ..","هدرجة","أكسدة","هلجنة","تفكك",2],
+["جزيئات كبيرة تتكون من العديد من الوحدات البنائية المتكررة ..","البوليمرات","المونومرات","النترات","التيلوميرات",0],
+["أي المركبات التالية تُعد مادة صناعية؟","النشا","البلاستيك","الحمض النووي","البروتينات",1],
+["أي الخصائص التالية ليست من خصائص البولي إيثيلين؟","شمعي","لا يذوب في الماء","نشط كيميائياً","رديء التوصيل للكهرباء",2],
+["الاسم النظامي لمادة PVC هو ..","بولي كلوريد الفينيل","الفينول","التولوين","الفاليوم",0]
+]},
+{t:"الكيمياء الحيوية",i:"🧬",h:"#6dffa0",q:[
+["ما هي وحدات البناء الأساسية للبروتين؟","الأحماض الكربوكسيلية","الأميدات","الأمينات","الأحماض الأمينية",3],
+["تتكون الوحدات البنائية البروتينية للخلايا التي نشأت منها أجسام المخلوقات الحية من ..","سكريات أحادية","أحماض دهنية","أحماض أمينية","مواد غازية",2],
+["يتوقع أن تتكون الإنزيمات من ..","أحماض نووية","أحماض أمينية","أحماض دهنية","جلسرين",1],
+["الحمض الأميني يحوي مجموعتين وظيفيتين هما ..","أمين وكربوكسيل","أمين وكربونيل","كربونيل وكربوكسيل","أمين وهيدروكسيل",0],
+["رابطة الأميد التي تجمع حمضين أمينيين ..","الرابطة التساهمية","الرابطة الببتيدية","الرابطة الأيونية","الرابطة الهيدروجينية",1],
+["رابطة تتكون من اتحاد مجموعة الكربوكسيل من حمض أميني مع مجموعة أمين من حمض أميني آخر ..","الببتيدية","التساهمية","الأيونية","الهيدروجينية",0],
+["محفزات حيوية تزيد من سرعة التفاعلات الكيميائية ..","الهرمون","الإنزيم","البروتين","الكوليسترول",1],
+["بروتين بنائي يُعد جزءاً من الجلد والأوتار والأربطة ..","الأنسولين","الكولاجين","الكيراتين","الهيموجلوبين",1],
+["هرمون بروتيني صغير تنتجه بعض خلايا البنكرياس ..","الكولاجين","الأنسولين","الهيموجلوبين","الكيراتين",1],
+["مركبات عضوية تُعد مصدراً للطاقة المختزنة في الجسم ..","الهيدروكربونات","الهرمونات","الإنزيمات","الكربوهيدرات",3],
+["الصيغة العامة للكربوهيدرات ..","(CHO)ₙ","(CHO₂)ₙ","(CH₂O)ₙ","(C₂HO)ₙ",2],
+["أي السكريات التالية يُسمى سكر الدم؟","الفركتوز","الجلوكوز","الجلاكتوز","السكروز",1],
+["الفركتوز من السكريات ..","الرباعية","الثلاثية","الثنائية","الأحادية",3],
+["المجموعة الوظيفية المميزة في سكر الفركتوز ..","كيتون","إستر","هيدروكسيل","كربوكسيل",0],
+["من السكريات الثنائية ..","السكروز","السليلوز","النشا","الفركتوز",0],
+["أي التالي يعتبر من الكربوهيدرات ثنائية التسكر؟","النشا","السليلوز","السكروز","الفركتوز",2],
+["جزيء فركتوز + جزيء جلوكوز ينتج عنهما ..","سكروز","لاكتوز","سليلوز","مالتوز",0],
+["الاسم العلمي لسكر الحليب ..","السكروز","الجلوكوز","اللاكتوز","الجلاكتوز",2],
+["من الأمثلة على السكريات عديدة التسكر ..","الجلاكتوز","السكروز","الجلوكوز","السليلوز",3],
+["بوليمر مسؤول عن تخزين الطاقة في الكبد ..","النشا","الجلوكوز","اللاكتوز","الجلايكوجين",3],
+["السليلوز مبلمر ضخم، يتكون من جزيئات صغيرة (مونومرات) هي ..","الجلاكتوز","الفركتوز","الجلوكوز","السكروز",2],
+["تُكوّن معظم تركيب الأغشية الخلوية ..","الليبيدات","البروتينات","الأحماض النووية","الأحماض الدهنية",0],
+["جليسريد ثلاثي استُبدل فيه أحد الأحماض الدهنية بمجموعة فوسفات قطبية ..","الإستر","الستيرويد","البروتين","الليبيد الفسفوري",3],
+["أي مما يلي ليبيد يتكون من اتحاد حمض دهني مع كحول ذي سلسلة طويلة؟","البروتين","الجليسريد","الشمع","الستيرويد",2],
+["تعتبر الشموع من ..","الإسترات","الليبيدات","البوليمرات","الألدهيدات",1],
+["ليبيدات تراكيبها تحوي حلقات متعددة ..","الببتيدات","البروتينات","الأحماض الدهنية","الستيرويدات",3],
+["الكوليسترول من أمثلة ..","الدهون المسفرة","الدهون غير المشبعة","الستيرويدات","الأحماض الأمينية",2],
+["ستيرويد يعمل مكوّناً بنائياً مهماً للأغشية الخلوية ..","الجلايكوجين","الكوليسترول","النشا","الكيراتين",1],
+["جميع الروابط بين ذرات الكربون أحادية في ..","الدهون المسفرة","الستيرويدات","الدهون المشبعة","الدهون غير المشبعة",2],
+["الأحماض الدهنية غير المشبعة تحوي روابط .... بين ذرات الكربون.","أحادية","ثنائية","ثلاثية","رباعية",1],
+["تفاعل الجليسريد الثلاثي مع محلول لقاعدة قوية لتكوين أملاح الكربوكسيلات والجليسرول ..","التكاثف","التصبن","أكسدة الجليسريد الثلاثي","الحذف",1],
+["في تفاعل التصبُّن: يحدث تميّه لـ ..","البروتين","الستيرويد","الجليسريد الثلاثي","الليبيد الفسفوري",2],
+["أملاح الصوديوم للأحماض الدهنية ..","الليبيدات","الصابون","الستيرويدات","الجليسريدات",1]
+]}
+];
+
+/* ================= أدوات ================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const LETTERS=["أ","ب","ج","د"];
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pctCls=p=>p>=80?"p-hi":p>=50?"p-md":"p-lo";
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("on"),2600)}
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));$("#"+id).classList.add("on");window.scrollTo({top:0,behavior:"smooth"})}
+function fmtDate(d){try{return new Date(d).toLocaleString("ar-SA",{dateStyle:"short",timeStyle:"short"})}catch(e){return d}}
+function fmtDur(s){s=+s||0;const m=Math.floor(s/60);return m?`${m} د ${s%60} ث`:`${s} ث`}
+
+/* ================= الخلفية ================= */
+const ICONS={
+atom:'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="32" cy="32" rx="28" ry="10"/><ellipse cx="32" cy="32" rx="28" ry="10" transform="rotate(60 32 32)"/><ellipse cx="32" cy="32" rx="28" ry="10" transform="rotate(120 32 32)"/><circle cx="32" cy="32" r="4" fill="currentColor"/></svg>',
+flask:'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M24 6h16M27 6v18L12 52a4 4 0 0 0 4 6h32a4 4 0 0 0 4-6L37 24V6"/><path d="M18 42h28"/><circle cx="28" cy="49" r="2"/><circle cx="37" cy="46" r="1.5"/></svg>',
+benz:'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><path d="M32 6l22 13v26L32 58 10 45V19z"/><circle cx="32" cy="32" r="11"/></svg>',
+mol:'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><circle cx="32" cy="32" r="8"/><circle cx="10" cy="14" r="5"/><circle cx="54" cy="14" r="5"/><circle cx="32" cy="58" r="4"/><path d="M26 26 14 17M38 26l12-9M32 40v14"/></svg>',
+tube:'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 4h20M26 4v46a6 6 0 0 0 12 0V4"/><path d="M26 34h12"/></svg>',
+beaker:'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6h40M16 6v48a4 4 0 0 0 4 4h24a4 4 0 0 0 4-4V6"/><path d="M16 34c6-4 10 4 16 0s10-4 16 0M22 16h8M22 24h6"/></svg>'
+};
+(function bg(){const b=$("#bg"),k=Object.keys(ICONS),n=window.innerWidth<600?12:22;
+  for(let i=0;i<n;i++){const d=document.createElement("div");d.className="fl";const s=28+Math.random()*60;
+    d.style.cssText=`width:${s}px;height:${s}px;left:${Math.random()*96}%;top:${Math.random()*94}%;--d:${14+Math.random()*16}s;animation-delay:-${Math.random()*20}s`;
+    d.innerHTML=ICONS[k[i%k.length]];b.appendChild(d)}
+  $("#bigAtom").innerHTML=ICONS.atom})();
+
+/* ================= التخزين ================= */
+const LS="chem_results_v1";
+let sb=null;
+async function initDB(){
+  if(!CONFIG.SUPABASE_URL||!CONFIG.SUPABASE_KEY)return;
+  try{await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";s.onload=res;s.onerror=rej;document.head.appendChild(s)});
+    sb=window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_KEY)}catch(e){console.warn("Supabase",e);sb=null}
+}
+function lsGet(){try{return JSON.parse(localStorage.getItem(LS)||"[]")}catch(e){return[]}}
+function lsSet(a){try{localStorage.setItem(LS,JSON.stringify(a))}catch(e){}}
+async function saveResult(r){
+  const all=lsGet();r.id=Date.now()+Math.random().toString(36).slice(2,6);all.push(r);lsSet(all);
+  if(sb){const{error}=await sb.from(CONFIG.TABLE).insert({name:r.name,cls:r.cls,section:r.section,section_title:r.section_title,score:r.score,total:r.total,duration:r.duration});
+    if(error){console.warn(error);toast("⚠️ تعذر إرسال الدرجة للسحابة، حُفظت على الجهاز")}}
+}
+async function loadResults(){
+  if(sb){const{data,error}=await sb.from(CONFIG.TABLE).select("*").order("created_at",{ascending:false});
+    if(!error)return data.map(d=>({...d,date:d.created_at}));toast("⚠️ تعذر جلب النتائج من السحابة")}
+  return lsGet().sort((a,b)=>new Date(b.date)-new Date(a.date));
+}
+async function delResult(id){if(sb)await sb.from(CONFIG.TABLE).delete().eq("id",id);lsSet(lsGet().filter(r=>String(r.id)!==String(id)))}
+async function clearAll(){if(sb)await sb.from(CONFIG.TABLE).delete().gte("id",0);lsSet([])}
+
+/* ================= الطالبة ================= */
+let student=null;try{student=JSON.parse(localStorage.getItem("chem_student")||"null")}catch(e){}
+function login(){
+  const name=$("#inName").value.trim().replace(/\s+/g," "),cls=$("#inCls").value.trim();
+  if(name.split(" ").length<2){toast("✍️ اكتبي اسمك الثنائي على الأقل");$("#inName").focus();return}
+  student={name,cls};try{localStorage.setItem("chem_student",JSON.stringify(student))}catch(e){}
+  goHome();
+}
+function logout(){student=null;try{localStorage.removeItem("chem_student")}catch(e){}updHeader();show("login")}
+function updHeader(){const on=!!student;["#stuChip","#homeBtn","#outBtn"].forEach(s=>$(s).style.display=on?"":"none");if(on)$("#stuName").textContent=student.name.split(" ")[0]}
+function goHome(){if(!student){show("login");return}updHeader();renderGrid();show("home")}
+function renderGrid(){
+  const mine=lsGet().filter(r=>r.name===student.name);
+  $("#grid").innerHTML=SECTIONS.map((s,i)=>{
+    const best=mine.filter(r=>r.section===i+1).reduce((m,r)=>Math.max(m,Math.round(r.score/r.total*100)),-1);
+    return `<button class="tile" style="--h:${s.h}" onclick="startQuiz(${i})">
+      <span class="no">${String(i+1).padStart(2,"0")}</span><span class="ic">${s.i}</span><h3>${s.t}</h3>
+      <div class="meta"><span>${s.q.length} سؤالاً</span>${best>=0?`<span class="best">أفضل: ${best}%</span>`:`<span>ابدئي ←</span>`}</div></button>`}).join("");
+}
+
+/* ================= الاختبار ================= */
+let quiz=null;
+function startQuiz(si){
+  if(!student){show("login");return}
+  const sec=SECTIONS[si],n=Math.min(CONFIG.PER_QUIZ,sec.q.length);
+  const pick=shuffle(sec.q.map((_,k)=>k)).slice(0,n);
+  quiz={si,idx:0,score:0,log:[],start:Date.now(),items:pick.map(k=>{
+    const q=sec.q[k],fixed=q.slice(1,5).some(o=>/ما سبق|مما ذكر/.test(o));
+    const ord=fixed?[0,1,2,3]:shuffle([0,1,2,3]);
+    return{text:q[0],opts:ord.map(o=>q[1+o]),ans:ord.indexOf(q[5])}})};
+  $("#qIc").textContent=sec.i;$("#qSec").textContent=sec.t;$("#qT").textContent=n;
+  renderQ();show("quiz");
+}
+function renderQ(){
+  const it=quiz.items[quiz.idx];
+  $("#qN").textContent=quiz.idx+1;$("#qScore").textContent=quiz.score;
+  $("#qBar").style.width=(quiz.idx/quiz.items.length*100)+"%";
+  $("#qText").textContent=it.text;$("#qFb").textContent="";$("#qFb").className="fb";
+  $("#qNext").style.visibility="hidden";
+  $("#qOpts").innerHTML=it.opts.map((o,i)=>`<button class="opt" onclick="answer(${i})"><span class="l">${LETTERS[i]}</span><span>${esc(o)}</span></button>`).join("");
+}
+function answer(i){
+  const it=quiz.items[quiz.idx],btns=[...document.querySelectorAll("#qOpts .opt")];
+  btns.forEach(b=>b.disabled=true);
+  const ok=i===it.ans;btns[it.ans].classList.add("ok");
+  if(ok){quiz.score++;$("#qFb").textContent=["أحسنتِ! 🎉","ممتاز! ⚛️","إجابة صحيحة 👏","رائعة! 🌟"][Math.floor(Math.random()*4)];$("#qFb").className="fb ok"}
+  else{btns[i].classList.add("no");$("#qFb").textContent="الإجابة الصحيحة: "+it.opts[it.ans];$("#qFb").className="fb no"}
+  quiz.log.push({q:it.text,your:it.opts[i],right:it.opts[it.ans],ok});
+  $("#qScore").textContent=quiz.score;
+  const last=quiz.idx===quiz.items.length-1;$("#qNext").textContent=last?"عرض النتيجة 🏁":"التالي ←";$("#qNext").style.visibility="visible";
+}
+function nextQ(){if(quiz.idx<quiz.items.length-1){quiz.idx++;renderQ()}else finish()}
+function quitQuiz(){if(confirm("هل تريدين إنهاء الاختبار؟ لن تُحفظ الدرجة."))goHome()}
+async function finish(){
+  $("#qBar").style.width="100%";
+  const total=quiz.items.length,score=quiz.score,p=Math.round(score/total*100),sec=SECTIONS[quiz.si];
+  const dur=Math.round((Date.now()-quiz.start)/1000);
+  const msg=p>=90?"مذهلة! أنتِ كيميائية حقيقية ⚗️":p>=75?"رائع جداً! أداء متميز 🌟":p>=50?"جيد، واصلي التدريب 💪":"لا بأس، أعيدي المحاولة وستتحسنين 🔁";
+  const ring=$("#ring");ring.style.setProperty("--p",p);ring.style.setProperty("--rc",p>=75?"#6dffa0":p>=50?"#ffd166":"#ff5a7e");
+  $("#rPct").textContent=p+"%";$("#rSc").textContent=`${score} / ${total}`;$("#rMsg").textContent=msg;
+  $("#rSub").textContent=`${sec.i} ${sec.t} · الوقت: ${fmtDur(dur)}`;
+  const wrong=quiz.log.filter(x=>!x.ok);
+  $("#review").innerHTML=wrong.length?`<h3>📝 راجعي أخطاءك (${wrong.length})</h3>`+wrong.map(w=>`<div class="rv"><p>${esc(w.q)}</p><div class="a w">✗ إجابتك: ${esc(w.your)}</div><div class="a c">✓ الصحيحة: ${esc(w.right)}</div></div>`).join(""):`<h3 style="text-align:center">🏆 لا توجد أخطاء — علامة كاملة!</h3>`;
+  show("result");if(p>=75)confetti();
+  await saveResult({name:student.name,cls:student.cls,section:quiz.si+1,section_title:sec.t,score,total,duration:dur,date:new Date().toISOString()});
+  toast("✅ تم إرسال درجتك للمعلمة");
+}
+function confetti(){const c=["#b46dff","#3ee6ff","#6dffa0","#ffd166","#ff5a7e"];
+  for(let i=0;i<70;i++){const d=document.createElement("i");d.className="confetti";
+    d.style.cssText=`left:${Math.random()*100}vw;background:${c[i%5]};animation-duration:${2+Math.random()*2.5}s;animation-delay:${Math.random()*.6}s`;
+    document.body.appendChild(d);setTimeout(()=>d.remove(),5200)}}
+
+/* ================= لوحة المعلمة ================= */
+let DATA=[],TAB="rank";
+function openTeacher(){if(sessionStorage.getItem("chem_t")==="1"){openDash();return}$("#tPass").value="";$("#tModal").classList.add("on");setTimeout(()=>$("#tPass").focus(),50)}
+function checkPass(){if($("#tPass").value===CONFIG.TEACHER_PASS){sessionStorage.setItem("chem_t","1");$("#tModal").classList.remove("on");openDash()}else{toast("❌ كلمة المرور غير صحيحة")}}
+function closeDash(){student?goHome():show("login")}
+async function openDash(){
+  show("dash");$("#dBody").innerHTML='<div class="empty">⏳ جاري تحميل النتائج...</div>';
+  $("#srcTxt").textContent=sb?"· متصلة بالسحابة ☁️":"· محفوظة على هذا الجهاز";
+  DATA=await loadResults();
+  const secSel=$("#fSec"),cv=secSel.value,clsSel=$("#fCls"),kv=clsSel.value;
+  secSel.innerHTML='<option value="">كل الأقسام</option>'+SECTIONS.map((s,i)=>`<option value="${i+1}">${s.i} ${s.t}</option>`).join("");secSel.value=cv;
+  const classes=[...new Set(DATA.map(r=>r.cls).filter(Boolean))].sort();
+  clsSel.innerHTML='<option value="">كل الفصول</option>'+classes.map(c=>`<option>${esc(c)}</option>`).join("");clsSel.value=kv;
+  renderDash();
+}
+function setTab(b){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));b.classList.add("on");TAB=b.dataset.t;renderDash()}
+function filtered(){const q=$("#fQ").value.trim(),s=$("#fSec").value,c=$("#fCls").value;
+  return DATA.filter(r=>(!q||String(r.name).includes(q))&&(!s||String(r.section)===s)&&(!c||r.cls===c))}
+function renderDash(){
+  const rows=filtered(),pc=r=>Math.round(r.score/r.total*100);
+  const names=new Set(rows.map(r=>r.name+"|"+(r.cls||"")));
+  $("#kS").textContent=names.size;$("#kA").textContent=rows.length;
+  $("#kAvg").textContent=rows.length?Math.round(rows.reduce((a,r)=>a+pc(r),0)/rows.length)+"%":"0%";
+  // تجميع الطالبات
+  const g={};rows.forEach(r=>{const k=r.name+"|"+(r.cls||"");(g[k]=g[k]||{name:r.name,cls:r.cls,list:[]}).list.push(r)});
+  const st=Object.values(g).map(x=>({...x,avg:Math.round(x.list.reduce((a,r)=>a+pc(r),0)/x.list.length),best:Math.max(...x.list.map(pc)),secs:new Set(x.list.map(r=>r.section)).size})).sort((a,b)=>b.avg-a.avg||b.list.length-a.list.length);
+  $("#kTop").textContent=st[0]?`${st[0].name} (${st[0].avg}%)`:"—";
+  const B=$("#dBody");
+  if(!rows.length){B.innerHTML='<div class="empty">🧪 لا توجد نتائج بعد</div>';return}
+  if(TAB==="rank"){
+    B.innerHTML=`<table><thead><tr><th>#</th><th>الطالبة</th><th>الفصل</th><th>المحاولات</th><th>الأقسام المنجزة</th><th>أفضل نتيجة</th><th>المتوسط</th></tr></thead><tbody>`+
+    st.map((s,i)=>`<tr><td>${["🥇","🥈","🥉"][i]||i+1}</td><td><b>${esc(s.name)}</b></td><td>${esc(s.cls||"—")}</td><td>${s.list.length}</td><td>${s.secs} / ${SECTIONS.length}</td><td><span class="pill ${pctCls(s.best)}">${s.best}%</span></td><td><span class="pill ${pctCls(s.avg)}">${s.avg}%</span></td></tr>`).join("")+`</tbody></table>`;
+  }else if(TAB==="all"){
+    B.innerHTML=`<table><thead><tr><th>الطالبة</th><th>الفصل</th><th>القسم</th><th>الدرجة</th><th>النسبة</th><th>الوقت</th><th>التاريخ</th><th></th></tr></thead><tbody>`+
+    rows.map(r=>`<tr><td><b>${esc(r.name)}</b></td><td>${esc(r.cls||"—")}</td><td>${SECTIONS[r.section-1]?.i||""} ${esc(r.section_title)}</td><td>${r.score} / ${r.total}</td><td><span class="pill ${pctCls(pc(r))}">${pc(r)}%</span></td><td>${fmtDur(r.duration)}</td><td>${fmtDate(r.date)}</td><td><button class="del" title="حذف" onclick="rmRow('${esc(r.id)}')">🗑</button></td></tr>`).join("")+`</tbody></table>`;
+  }else{
+    B.innerHTML='<div class="bars">'+SECTIONS.map((s,i)=>{const l=rows.filter(r=>r.section===i+1);const a=l.length?Math.round(l.reduce((x,r)=>x+pc(r),0)/l.length):0;
+      return `<div class="bar"><span>${s.i} ${s.t}</span><span class="tr"><i style="width:${a}%"></i></span><b>${l.length?a+"%":"—"}</b></div>`}).join("")+'</div>';
+  }
+}
+async function rmRow(id){if(!confirm("حذف هذه المحاولة؟"))return;await delResult(id);DATA=DATA.filter(r=>String(r.id)!==String(id));renderDash();toast("تم الحذف")}
+async function wipe(){if(!confirm("سيتم حذف جميع النتائج نهائياً. متأكدة؟"))return;await clearAll();DATA=[];renderDash();toast("تم حذف جميع النتائج")}
+function exportCSV(){
+  const rows=filtered();if(!rows.length){toast("لا توجد بيانات للتصدير");return}
+  const h=["الطالبة","الفصل","القسم","الدرجة","من","النسبة","الوقت (ثانية)","التاريخ"];
+  const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  const csv="\uFEFF"+[h.map(q).join(",")].concat(rows.map(r=>[r.name,r.cls,r.section_title,r.score,r.total,Math.round(r.score/r.total*100)+"%",r.duration,fmtDate(r.date)].map(q).join(","))).join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="نتائج-الكيمياء.csv";a.click();
+}
+
+/* ================= تشغيل ================= */
+["#tName","#dName","#fName"].forEach(s=>$(s).textContent=CONFIG.TEACHER_NAME);
+$("#sQ").textContent=SECTIONS.reduce((a,s)=>a+s.q.length,0);$("#sSec").textContent=SECTIONS.length;
+$("#sPer").textContent=CONFIG.PER_QUIZ;$("#perTxt").textContent=CONFIG.PER_QUIZ;
+$("#inName").addEventListener("keydown",e=>{if(e.key==="Enter")$("#inCls").focus()});
+$("#inCls").addEventListener("keydown",e=>{if(e.key==="Enter")login()});
+initDB();
+if(student)goHome();else updHeader();
+</script>
+</body>
+</html>
